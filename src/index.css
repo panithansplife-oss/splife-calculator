@@ -15,3 +15,25 @@
 .tabular-nums {
   font-variant-numeric: tabular-nums;
 }
+
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 5mm 6mm;
+  }
+
+  @page saleSheet {
+    size: A4 portrait;
+    margin: 6mm 7mm;
+  }
+
+  .print-sale-sheet-page {
+    page: saleSheet;
+  }
+
+  body {
+    background: #ffffff !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

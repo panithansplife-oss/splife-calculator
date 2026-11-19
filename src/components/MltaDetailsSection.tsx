@@ -8,6 +8,8 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 
+import type { InsuranceType } from '../utils/insuranceCalculator';
+
 type DetailTab = 'all' | 'underwriting' | 'benefits' | 'definitions' | 'exclusions';
 
 const TAB_ITEMS: { id: DetailTab; label: string }[] = [
@@ -18,8 +20,15 @@ const TAB_ITEMS: { id: DetailTab; label: string }[] = [
   { id: 'exclusions', label: '4. ข้อยกเว้นความคุ้มครอง' },
 ];
 
-export const MltaDetailsSection: React.FC = () => {
+interface MltaDetailsSectionProps {
+  insuranceType?: InsuranceType;
+}
+
+export const MltaDetailsSection: React.FC<MltaDetailsSectionProps> = ({
+  insuranceType = 'mlta',
+}) => {
   const [activeTab, setActiveTab] = useState<DetailTab>('all');
+  const isMrta = insuranceType === 'mrta';
 
   const showSection = (section: Exclude<DetailTab, 'all'>) =>
     activeTab === 'all' || activeTab === section;
@@ -27,7 +36,11 @@ export const MltaDetailsSection: React.FC = () => {
   return (
     <section
       id="mlta-details-section"
-      aria-label="รายละเอียดโครงการประกันชีวิตคุ้มครองสินเชื่อ แบบทุนคงที่ (MLTA)"
+      aria-label={
+        isMrta
+          ? 'รายละเอียดโครงการประกันชีวิตคุ้มครองสินเชื่อ แบบทุนลดลง (MRTA)'
+          : 'รายละเอียดโครงการประกันชีวิตคุ้มครองสินเชื่อ แบบทุนคงที่ (MLTA)'
+      }
       className="rounded-2xl border border-slate-200 bg-white overflow-hidden"
     >
       {/* Section Header & Filter Tabs */}
@@ -39,8 +52,17 @@ export const MltaDetailsSection: React.FC = () => {
             </p>
             <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white text-balance">
               โครงการประกันชีวิตคุ้มครองสินเชื่อ{' '}
-              <span className="text-amber-300">แบบทุนคงที่</span> (M
-              <span className="text-red-400">L</span>TA)
+              {isMrta ? (
+                <>
+                  <span className="text-amber-300">แบบทุนลดลง</span> (M
+                  <span className="text-red-400">R</span>TA)
+                </>
+              ) : (
+                <>
+                  <span className="text-amber-300">แบบทุนคงที่</span> (M
+                  <span className="text-red-400">L</span>TA)
+                </>
+              )}
             </h2>
           </div>
         </div>
@@ -117,11 +139,11 @@ export const MltaDetailsSection: React.FC = () => {
                         <li>
                           อายุ{' '}
                           <span className="font-semibold text-red-600 tabular-nums">
-                            20–65 ปี
+                            {isMrta ? '20–70 ปี' : '20–65 ปี'}
                           </span>{' '}
                           รวมระยะเวลาผ่อนชำระหนี้สินไม่เกินอายุ{' '}
                           <span className="font-semibold text-red-600 tabular-nums">
-                            70 ปี
+                            {isMrta ? '75 ปี' : '70 ปี'}
                           </span>
                         </li>
                         <li>
@@ -273,7 +295,9 @@ export const MltaDetailsSection: React.FC = () => {
                   และบริษัทได้รับหลักฐานพิสูจน์การมรณกรรมตามแบบและวิธีที่บริษัทกำหนดจนครบถ้วนแล้ว
                   จะจ่ายผลประโยชน์เท่ากับ{' '}
                   <span className="font-semibold text-red-600">
-                    100% ของจำนวนเงินเอาประกันภัย ณ วันเริ่มสัญญา
+                    {isMrta
+                      ? '100% ของจำนวนเงินเอาประกันภัยที่ลดลงตามตารางความคุ้มครอง'
+                      : '100% ของจำนวนเงินเอาประกันภัย ณ วันเริ่มสัญญา'}
                   </span>
                 </p>
               </div>

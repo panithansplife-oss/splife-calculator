@@ -67,6 +67,7 @@ export const ComparisonPanel: React.FC<ComparisonPanelProps> = ({
     if (savedPlans.length === 0) return;
     const headers = [
       'ชื่อแผน',
+      'แบบประกัน',
       'เพศ',
       'ปีเกิด (พ.ศ.)',
       'อายุ (ปี)',
@@ -78,6 +79,7 @@ export const ComparisonPanel: React.FC<ComparisonPanelProps> = ({
     ];
     const rows = savedPlans.map((p) => [
       `"${p.label.replace(/"/g, '""')}"`,
+      p.insuranceType === 'mrta' ? 'MRTA (ทุนลดลง)' : 'MLTA (ทุนคงที่)',
       p.gender === 'male' ? 'ชาย' : 'หญิง',
       p.birthYearBE,
       p.age,
@@ -261,11 +263,19 @@ export const ComparisonPanel: React.FC<ComparisonPanelProps> = ({
                         <div className="font-semibold text-slate-900 text-xs sm:text-sm">
                           {plan.label}
                         </div>
-                        {isLowestTotal && (
-                          <div className="text-xs text-emerald-700 font-semibold mt-0.5">
-                            เบี้ยรวมต่ำสุด
-                          </div>
-                        )}
+                        <div className="text-xs text-slate-500 mt-0.5 flex items-center gap-1.5">
+                          <span className="font-medium text-slate-700">
+                            {plan.insuranceType === 'mrta' ? 'MRTA (ทุนลดลง)' : 'MLTA (ทุนคงที่)'}
+                          </span>
+                          {isLowestTotal && (
+                            <>
+                              <span aria-hidden="true">·</span>
+                              <span className="font-semibold text-emerald-700">
+                                เบี้ยรวมต่ำสุด
+                              </span>
+                            </>
+                          )}
+                        </div>
                       </td>
                       <td className="py-3.5 px-3 text-xs text-slate-700 whitespace-nowrap tabular-nums">
                         {plan.gender === 'male' ? 'ชาย' : 'หญิง'} · {plan.age} ปี (พ.ศ.{' '}

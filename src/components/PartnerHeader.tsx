@@ -22,7 +22,7 @@ export const PartnerHeader: React.FC = () => {
             <span className="text-emerald-200/80 font-normal">รับประกันโดย:</span>
             <div className="inline-flex flex-wrap items-center gap-1.5">
               <span className="inline-flex items-center rounded-md bg-[#168A4B]/20 border border-[#168A4B]/40 px-2.5 py-1 text-xs font-semibold text-[#4ADE80]">
-                อาคเนย์ประกันชีวิต (SE Life)
+                อาคเนย์ประกันชีวิต
               </span>
               <span className="inline-flex items-center rounded-md bg-[#D81373]/20 border border-[#D81373]/40 px-2.5 py-1 text-xs font-semibold text-[#F472B6]">
                 เมืองไทยประกันชีวิต

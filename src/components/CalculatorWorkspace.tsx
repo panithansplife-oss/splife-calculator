@@ -1,23 +1,25 @@
 import React, { useState } from 'react';
 import {
   AlertTriangle,
-  BookmarkPlus,
-  Check,
   Minus,
   Plus,
-  RotateCcw,
   User,
 } from 'lucide-react';
 import {
   type CalculationResult,
   type Gender,
-  calculateInsurance,
+  type InsuranceType,
+  MLTA_MAX_AGE_PLUS_TERM,
+  MRTA_KEY_TERMS,
+  MRTA_MAX_AGE_PLUS_TERM,
   formatBaht,
   formatIntegerInput,
+  getMltaCustomerTerms,
 } from '../utils/insuranceCalculator';
 import { PartnerHeader } from './PartnerHeader';
 
 interface CalculatorWorkspaceProps {
+  insuranceType: InsuranceType;
   gender: Gender;
   setGender: (g: Gender) => void;
   birthYearInput: string;
@@ -29,9 +31,7 @@ interface CalculatorWorkspaceProps {
   planId: string;
   setPlanId: (id: string) => void;
   result: CalculationResult;
-  onSavePlan: (customLabel: string) => void;
-  onResetDefaults: () => void;
-  savedCount: number;
+  onResetDefaults?: () => void;
 }
 
 const SUM_PRESETS = [
@@ -44,9 +44,10 @@ const SUM_PRESETS = [
   { label: '150 ล้าน', value: 150_000_000 },
 ];
 
-const TERM_PRESETS = [1, 5, 10, 15, 20, 30];
+const MLTA_KEY_TERMS = [5, 10, 15, 20, 25, 30] as const;
 
 export const CalculatorWorkspace: React.FC<CalculatorWorkspaceProps> = ({
+  insuranceType,
   gender,
   setGender,
   birthYearInput,
@@ -56,12 +57,7 @@ export const CalculatorWorkspace: React.FC<CalculatorWorkspaceProps> = ({
   termInput,
   setTermInput,
   result,
-  onSavePlan,
-  onResetDefaults,
-  savedCount,
 }) => {
-  const [planLabel, setPlanLabel] = useState('');
-  const [justSaved, setJustSaved] = useState(false);
   const [touched, setTouched] = useState({
     birthYear: false,
     sumAssured: false,
@@ -75,25 +71,25 @@ export const CalculatorWorkspace: React.FC<CalculatorWorkspaceProps> = ({
     Boolean(result.errors.sumAssured) &&
     (sumAssuredInput.trim().length > 0 || touched.sumAssured);
   const showTermError =
+    insuranceType === 'mlta' &&
     Boolean(result.errors.term) &&
     (termInput.trim().length > 0 || touched.term);
   const hasEmptyRequiredField =
-    !birthYearInput.trim() || !sumAssuredInput.trim() || !termInput.trim();
-
-  const isComparisonFull = savedCount >= 4;
-
-  const handleSave = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!result.isValid || isComparisonFull) return;
-    onSavePlan(planLabel.trim());
-    setPlanLabel('');
-    setJustSaved(true);
-    window.setTimeout(() => setJustSaved(false), 1800);
-  };
+    !birthYearInput.trim() || !sumAssuredInput.trim();
 
   const adjustBirthYear = (delta: number) => {
     const currentVal = result.birthYearBE ?? result.currentYearBE - 47;
     setBirthYearInput(String(currentVal + delta));
+  };
+
+  const adjustTerm = (delta: number) => {
+    const maxCap =
+      result.age !== null
+        ? Math.max(1, Math.min(30, MLTA_MAX_AGE_PLUS_TERM - result.age))
+        : 30;
+    const base = result.term ?? (delta > 0 ? 0 : 11);
+    const next = Math.max(1, Math.min(maxCap, base + delta));
+    setTermInput(String(next));
   };
 
   const handleSumBlur = () => {
@@ -173,7 +169,8 @@ export const CalculatorWorkspace: React.FC<CalculatorWorkspaceProps> = ({
                 ปีเกิด (พ.ศ.)
               </label>
               <span className="text-xs text-slate-500">
-                เกณฑ์รับประกันอายุ 20–65 ปี (ปีปัจจุบัน {result.currentYearBE} - ปีเกิด)
+                เกณฑ์รับประกันอายุ 20–{insuranceType === 'mrta' ? '70' : '65'} ปี (ปีปัจจุบัน{' '}
+                {result.currentYearBE} - ปีเกิด)
               </span>
             </div>
 
@@ -330,52 +327,78 @@ export const CalculatorWorkspace: React.FC<CalculatorWorkspaceProps> = ({
             )}
           </div>
 
-          {/* 4. Policy Term (ระยะเวลาเอาประกัน) */}
-          <div className="space-y-2.5 pt-2 border-t border-slate-100">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <label
-                htmlFor="term-input"
-                className="block text-sm font-semibold text-slate-800"
-              >
-                ระยะเวลาเอาประกัน
-              </label>
-              <span className="text-xs text-slate-500 tabular-nums">
-                เลือกได้ 1–30 ปี (จำนวนเต็มเท่านั้น)
-              </span>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
-              <div className="sm:col-span-5 relative">
-                <input
-                  id="term-input"
-                  type="text"
-                  inputMode="numeric"
-                  value={termInput}
-                  onChange={(e) => setTermInput(e.target.value)}
-                  onBlur={() => setTouched((prev) => ({ ...prev, term: true }))}
-                  placeholder="เช่น 10"
-                  aria-invalid={showTermError}
-                  aria-describedby="term-warning-note"
-                  className={`h-14 w-full rounded-xl border-2 px-4 pr-12 font-mono text-xl font-bold tabular-nums tracking-tight text-slate-900 placeholder:font-medium placeholder:text-slate-400/80 shadow-sm transition-all focus:outline-none ${
-                    showTermError
-                      ? 'border-red-500 bg-red-50/40 focus:bg-white focus:ring-4 focus:ring-red-200/60'
-                      : 'border-emerald-600/70 bg-emerald-50/35 hover:border-emerald-700 focus:bg-white focus:border-emerald-700 focus:ring-4 focus:ring-emerald-500/20'
-                  }`}
-                />
-                <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-xs font-semibold text-emerald-900/70">
-                  ปี
+          {/* 4. Policy Term (MLTA only) */}
+          {insuranceType === 'mlta' && (
+            <div className="space-y-2.5 pt-2 border-t border-slate-100">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <label
+                  htmlFor="term-input"
+                  className="block text-sm font-semibold text-slate-800"
+                >
+                  จำนวนปีที่เอาประกัน
+                </label>
+                <span className="text-xs text-slate-500 tabular-nums">
+                  {result.age !== null && !result.errors.birthYear
+                    ? `1–${Math.max(0, Math.min(30, MLTA_MAX_AGE_PLUS_TERM - result.age))} ปี (อายุ + ระยะเวลา ≤ 70 ปี)`
+                    : '1–30 ปี (อายุ + ระยะเวลา ≤ 70 ปี)'}
                 </span>
               </div>
 
-              <div className="sm:col-span-7 flex flex-wrap gap-1.5" aria-label="ตัวเลือกระยะเวลาด่วน">
-                {TERM_PRESETS.map((t) => {
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => adjustTerm(-1)}
+                  aria-label="ลดจำนวนปีเอาประกัน 1 ปี"
+                  className="inline-flex h-14 w-12 shrink-0 items-center justify-center rounded-xl border-2 border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 hover:border-slate-300 active:scale-[0.98] transition-all"
+                >
+                  <Minus className="h-4 w-4" aria-hidden="true" />
+                </button>
+                <div className="relative flex-1">
+                  <input
+                    id="term-input"
+                    type="text"
+                    inputMode="numeric"
+                    value={termInput}
+                    onChange={(e) => setTermInput(e.target.value)}
+                    onBlur={() => setTouched((prev) => ({ ...prev, term: true }))}
+                    placeholder="เช่น 10 (หรือเว้นว่างดูสรุปทุกระยะ)"
+                    aria-invalid={showTermError}
+                    aria-describedby="term-help"
+                    className={`h-14 w-full rounded-xl border-2 px-4 pr-14 font-mono text-xl font-bold tabular-nums tracking-tight text-slate-900 placeholder:text-sm placeholder:font-medium placeholder:text-slate-400/80 shadow-sm transition-all focus:outline-none ${
+                      showTermError
+                        ? 'border-red-500 bg-red-50/40 focus:bg-white focus:ring-4 focus:ring-red-200/60'
+                        : 'border-emerald-600/70 bg-emerald-50/35 hover:border-emerald-700 focus:bg-white focus:border-emerald-700 focus:ring-4 focus:ring-emerald-500/20'
+                    }`}
+                  />
+                  <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-xs font-semibold text-emerald-900/70">
+                    ปี
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => adjustTerm(1)}
+                  aria-label="เพิ่มจำนวนปีเอาประกัน 1 ปี"
+                  className="inline-flex h-14 w-12 shrink-0 items-center justify-center rounded-xl border-2 border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 hover:border-slate-300 active:scale-[0.98] transition-all"
+                >
+                  <Plus className="h-4 w-4" aria-hidden="true" />
+                </button>
+              </div>
+
+              {/* Quick Term Presets */}
+              <div className="flex flex-wrap items-center gap-1.5" aria-label="ตัวเลือกจำนวนปีเอาประกันด่วน">
+                {MLTA_KEY_TERMS.map((t) => {
                   const isSelected = result.term === t;
+                  const exceedsCap =
+                    result.age !== null &&
+                    !result.errors.birthYear &&
+                    result.age + t > MLTA_MAX_AGE_PLUS_TERM;
                   return (
                     <button
                       key={t}
                       type="button"
+                      disabled={exceedsCap}
                       onClick={() => setTermInput(String(t))}
-                      className={`rounded-lg border px-3 py-2 text-xs font-medium tabular-nums transition-colors whitespace-nowrap shrink-0 ${
+                      className={`rounded-lg border px-2.5 py-1.5 text-xs font-medium tabular-nums transition-colors whitespace-nowrap shrink-0 disabled:opacity-40 disabled:cursor-not-allowed ${
                         isSelected
                           ? 'border-emerald-700 bg-emerald-50 text-emerald-900'
                           : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100 hover:text-slate-900'
@@ -385,73 +408,101 @@ export const CalculatorWorkspace: React.FC<CalculatorWorkspaceProps> = ({
                     </button>
                   );
                 })}
+                {termInput.trim() !== '' && (
+                  <button
+                    type="button"
+                    onClick={() => setTermInput('')}
+                    className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition-colors whitespace-nowrap shrink-0"
+                  >
+                    ดูสรุปทุกระยะ
+                  </button>
+                )}
               </div>
-            </div>
 
-            {showTermError && (
-              <div
-                role="alert"
-                className="flex items-start gap-2 rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-xs font-medium text-red-800"
-              >
-                <AlertTriangle className="h-4 w-4 shrink-0 text-red-600 mt-0.5" aria-hidden="true" />
-                <span>{result.errors.term}</span>
-              </div>
-            )}
-
-            {/* Mandatory End-of-Form Important Warning */}
-            <div
-              id="term-warning-note"
-              className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50/80 px-3.5 py-2.5 text-xs text-amber-950"
-            >
-              <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600 mt-0.5" aria-hidden="true" />
-              <div className="space-y-0.5">
-                <p className="font-semibold">
-                  ข้อควรระวังสำคัญ: ต้องไม่เกินกว่าระยะเวลากู้ยืมเงินตามสัญญากู้
+              {showTermError ? (
+                <div
+                  role="alert"
+                  className="flex items-start gap-2 rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-xs font-medium text-red-800"
+                >
+                  <AlertTriangle className="h-4 w-4 shrink-0 text-red-600 mt-0.5" aria-hidden="true" />
+                  <span>{result.errors.term}</span>
+                </div>
+              ) : (
+                <p id="term-help" className="text-xs text-slate-500">
+                  กรอกจำนวนเต็ม 1–30 ปี และต้องไม่เกินระยะเวลากู้ยืมเงินตามสัญญากู้ (เว้นว่างเพื่อดูสรุปทุกระยะ)
                 </p>
-                <p className="text-amber-800">
-                  หมายเหตุเพิ่มเติม: ค่าที่กรอกทุกช่อง (ปีเกิด พ.ศ., ทุนประกัน และระยะเวลาเอาประกัน) ต้องเป็นตัวเลขจำนวนเต็มเท่านั้น
-                </p>
-              </div>
+              )}
             </div>
-          </div>
+          )}
+
         </div>
 
         {/* Right Column: Real-Time Calculation Results */}
         <div className="lg:col-span-5 space-y-5">
           <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
-            {/* Primary Premium Hero Block (Total Premium Only) */}
+            {/* Primary Premium Hero Block */}
             <div className="bg-[#0F2A1E] text-white p-6">
               <div className="flex items-center justify-between gap-2 text-xs text-emerald-200/90">
-                <span>ผลการคำนวณเบี้ยประกัน</span>
+                <span>
+                  ผลการคำนวณเบี้ยประกัน (
+                  {insuranceType === 'mrta' ? 'MRTA ทุนลดลง' : 'MLTA ทุนคงที่'})
+                </span>
                 <span className="truncate">รับประกันโดย SP Life และพันธมิตร</span>
               </div>
 
               {result.isValid && result.totalPremium !== null ? (
-                <div className="mt-4 space-y-4">
-                  <div>
+                <div className="mt-4 space-y-2">
+                  <div className="flex items-center justify-between gap-2">
                     <p className="text-xs text-emerald-200/80">
                       เบี้ยประกันรวมตลอดสัญญา ({result.term} ปี)
                     </p>
-                    <div className="mt-1 flex items-baseline gap-2">
-                      <span
-                        data-testid="total-premium"
-                        className="font-mono text-3xl sm:text-4xl font-bold tracking-tight tabular-nums text-white"
-                      >
-                        {formatBaht(result.totalPremium)}
-                      </span>
-                      <span className="text-sm font-medium text-emerald-200">
-                        บาท
-                      </span>
-                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setTermInput('')}
+                      className="text-[11px] font-medium text-emerald-200 underline hover:text-white"
+                    >
+                      ดูสรุปทุกระยะ
+                    </button>
+                  </div>
+                  <div className="flex items-baseline gap-2">
+                    <span
+                      data-testid="total-premium"
+                      className="font-mono text-3xl sm:text-4xl font-bold tracking-tight tabular-nums text-white"
+                    >
+                      {formatBaht(result.totalPremium)}
+                    </span>
+                    <span className="text-sm font-medium text-emerald-200">
+                      บาท
+                    </span>
                   </div>
                 </div>
-              ) : hasEmptyRequiredField && !showBirthYearError && !showSumAssuredError && !showTermError ? (
+              ) : result.isValid && result.age !== null && result.sumAssured !== null ? (
+                <div className="mt-4 space-y-1">
+                  <p className="text-xs text-emerald-200/80">
+                    สรุปเบี้ยประกันตามอายุ {result.age} ปี · ทุน{' '}
+                    {formatBaht(result.sumAssured)} บาท
+                  </p>
+                  <p className="text-base sm:text-lg font-bold text-white">
+                    คุ้มครองสูงสุด{' '}
+                    {Math.max(
+                      0,
+                      Math.min(
+                        30,
+                        (insuranceType === 'mrta'
+                          ? MRTA_MAX_AGE_PLUS_TERM
+                          : MLTA_MAX_AGE_PLUS_TERM) - result.age
+                      )
+                    )}{' '}
+                    ปี (ตาราง 1–30 ปีด้านล่าง)
+                  </p>
+                </div>
+              ) : hasEmptyRequiredField && !showBirthYearError && !showSumAssuredError ? (
                 <div className="mt-4 rounded-xl border border-emerald-800/80 bg-emerald-950/60 p-4 text-sm text-emerald-100">
                   <p className="font-semibold text-emerald-300">
                     กรุณากรอกข้อมูลเพื่อคำนวณเบี้ยประกัน
                   </p>
                   <p className="mt-1 text-xs text-emerald-200/80">
-                    ระบุปีเกิด (พ.ศ.) ทุนประกัน และระยะเวลาเอาประกัน ระบบจะแสดงเบี้ยประกันรวมและ FBI 20% ทันที
+                    ระบุเพศ ปีเกิด (พ.ศ.) และทุนประกัน ระบบจะสรุปเบี้ยประกันและสร้างตาราง 1–30 ปีด้านล่างทันที
                   </p>
                 </div>
               ) : (
@@ -466,103 +517,115 @@ export const CalculatorWorkspace: React.FC<CalculatorWorkspaceProps> = ({
               )}
             </div>
 
-            {/* Structured Breakdown Table */}
-            <div className="divide-y divide-slate-100 px-6 py-2">
-              <div className="flex items-center justify-between py-3.5 text-sm">
-                <div>
-                  <p className="font-medium text-slate-800">FBI ที่ได้ (20%)</p>
-                  <p className="text-xs text-slate-500">ผลตอบแทน 20% จากเบี้ยประกัน</p>
+            {result.isValid &&
+            result.totalPremium === null &&
+            result.age !== null &&
+            result.sumAssured !== null ? (
+              <div className="divide-y divide-slate-100 px-5 py-2">
+                {insuranceType === 'mrta'
+                  ? MRTA_KEY_TERMS.map((t) => {
+                      const quote = result.mrtaQuotes?.[t] ?? null;
+                      const isAvailable = quote !== null;
+                      return (
+                        <button
+                          key={t}
+                          type="button"
+                          disabled={!isAvailable}
+                          onClick={() => isAvailable && setTermInput(String(t))}
+                          className="flex w-full items-center justify-between gap-3 py-2.5 text-left text-sm hover:bg-emerald-50/50 disabled:hover:bg-transparent transition-colors rounded-lg px-1"
+                        >
+                          <div className="min-w-0">
+                            <p className="font-semibold text-slate-900 tabular-nums">
+                              คุ้มครอง {t} ปี
+                            </p>
+                            <p className="text-xs text-slate-500 tabular-nums">
+                              {isAvailable
+                                ? `FBI 20%: ${formatBaht(quote.fbiReward)} บ.`
+                                : 'เกินเกณฑ์อายุรวม 75 ปี'}
+                            </p>
+                          </div>
+                          <span className="font-mono text-base font-bold tabular-nums text-emerald-800 shrink-0">
+                            {isAvailable ? `${formatBaht(quote.totalPremium)} บ.` : '—'}
+                          </span>
+                        </button>
+                      );
+                    })
+                  : (() => {
+                      const allQuotes = getMltaCustomerTerms(
+                        result.gender,
+                        result.age,
+                        result.sumAssured
+                      );
+                      return MLTA_KEY_TERMS.map((t) => {
+                        const quote = allQuotes.find((q) => q.term === t);
+                        const isAvailable = quote && quote.totalPremium !== null;
+                        return (
+                          <button
+                            key={t}
+                            type="button"
+                            disabled={!isAvailable}
+                            onClick={() => isAvailable && setTermInput(String(t))}
+                            className="flex w-full items-center justify-between gap-3 py-2.5 text-left text-sm hover:bg-emerald-50/50 disabled:hover:bg-transparent transition-colors rounded-lg px-1"
+                          >
+                            <div className="min-w-0">
+                              <p className="font-semibold text-slate-900 tabular-nums">
+                                คุ้มครอง {t} ปี
+                              </p>
+                              <p className="text-xs text-slate-500 tabular-nums">
+                                {isAvailable
+                                  ? `FBI 20%: ${formatBaht(quote.fbiReward!)} บ.`
+                                  : 'เกินเกณฑ์อายุรวม 70 ปี'}
+                              </p>
+                            </div>
+                            <span className="font-mono text-base font-bold tabular-nums text-emerald-800 shrink-0">
+                              {isAvailable ? `${formatBaht(quote.totalPremium!)} บ.` : '—'}
+                            </span>
+                          </button>
+                        );
+                      });
+                    })()}
+              </div>
+            ) : (
+              <>
+                {/* Structured Breakdown Table (Single-term clicked or empty state) */}
+                <div className="divide-y divide-slate-100 px-6 py-2">
+                  <div className="flex items-center justify-between py-3.5 text-sm">
+                    <div>
+                      <p className="font-medium text-slate-800">FBI ที่ได้ (20%)</p>
+                      <p className="text-xs text-slate-500">ผลตอบแทน 20% จากเบี้ยประกัน</p>
+                    </div>
+                    <span
+                      data-testid="fbi-reward"
+                      className="font-mono text-base font-bold tabular-nums text-emerald-700"
+                    >
+                      {result.isValid && result.fbiReward !== null
+                        ? `${formatBaht(result.fbiReward)} บาท`
+                        : '—'}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between py-3.5 text-sm">
+                    <span className="text-slate-600">อัตราเบี้ยต่อทุน 1,000 บาท</span>
+                    <span className="font-mono text-sm font-semibold tabular-nums text-slate-800">
+                      {result.isValid && result.ratePerThousand !== null
+                        ? `${result.ratePerThousand.toFixed(2)} บาท`
+                        : '—'}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between py-3.5 text-sm">
+                    <span className="text-slate-600">ข้อมูลผู้เอาประกัน</span>
+                    <span className="font-medium text-slate-800 tabular-nums">
+                      {gender === 'male' ? 'ชาย' : 'หญิง'} ·{' '}
+                      {result.age !== null ? `อายุ ${result.age} ปี` : '—'} ·{' '}
+                      {result.sumAssured !== null
+                        ? `ทุน ${formatBaht(result.sumAssured)} บ.`
+                        : '—'}
+                    </span>
+                  </div>
                 </div>
-                <span
-                  data-testid="fbi-reward"
-                  className="font-mono text-base font-bold tabular-nums text-emerald-700"
-                >
-                  {result.isValid && result.fbiReward !== null
-                    ? `${formatBaht(result.fbiReward)} บาท`
-                    : '—'}
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between py-3.5 text-sm">
-                <span className="text-slate-600">อัตราเบี้ยต่อทุน 1,000 บาท</span>
-                <span className="font-mono text-sm font-semibold tabular-nums text-slate-800">
-                  {result.isValid && result.ratePerThousand !== null
-                    ? `${result.ratePerThousand.toFixed(2)} บาท`
-                    : '—'}
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between py-3.5 text-sm">
-                <span className="text-slate-600">ข้อมูลผู้เอาประกัน</span>
-                <span className="font-medium text-slate-800 tabular-nums">
-                  {gender === 'male' ? 'ชาย' : 'หญิง'} ·{' '}
-                  {result.age !== null ? `อายุ ${result.age} ปี` : '—'} ·{' '}
-                  {result.sumAssured !== null
-                    ? `ทุน ${formatBaht(result.sumAssured)} บ.`
-                    : '—'}
-                </span>
-              </div>
-            </div>
-
-            {/* Save to Compare Form */}
-            <form
-              onSubmit={handleSave}
-              className="border-t border-slate-200 bg-slate-50/70 p-5 space-y-3"
-            >
-              <div className="flex items-center justify-between gap-2">
-                <label
-                  htmlFor="plan-label-input"
-                  className="block text-xs font-medium text-slate-600"
-                >
-                  ตั้งชื่อแผนเพื่อบันทึกเปรียบเทียบ (ไม่ระบุก็ได้)
-                </label>
-                <span className="font-mono text-xs font-semibold tabular-nums text-emerald-800">
-                  {savedCount}/4 แผน
-                </span>
-              </div>
-              <input
-                id="plan-label-input"
-                type="text"
-                value={planLabel}
-                onChange={(e) => setPlanLabel(e.target.value)}
-                disabled={isComparisonFull}
-                placeholder="เช่น สินเชื่อบ้าน 5 ปี หรือ แผนกู้สหกรณ์"
-                className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-100 disabled:bg-slate-100 disabled:text-slate-400"
-              />
-              {isComparisonFull && (
-                <div
-                  role="status"
-                  className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-900"
-                >
-                  <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600 mt-0.5" aria-hidden="true" />
-                  <span>
-                    ตารางเปรียบเทียบเต็มแล้ว (สูงสุด 4 แผน) กรุณาลบแผนเดิมในตารางด้านล่างก่อนบันทึกเพิ่ม
-                  </span>
-                </div>
-              )}
-              <button
-                type="submit"
-                disabled={!result.isValid || isComparisonFull}
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-700 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-emerald-800 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700 focus-visible:ring-offset-2"
-              >
-                {justSaved ? (
-                  <>
-                    <Check className="h-4 w-4" aria-hidden="true" />
-                    <span>บันทึกแผนเรียบร้อยแล้ว ({savedCount}/4 แผน)</span>
-                  </>
-                ) : isComparisonFull ? (
-                  <>
-                    <BookmarkPlus className="h-4 w-4" aria-hidden="true" />
-                    <span>บันทึกครบสูงสุด 4 แผนแล้ว</span>
-                  </>
-                ) : (
-                  <>
-                    <BookmarkPlus className="h-4 w-4" aria-hidden="true" />
-                    <span>บันทึกข้อมูลเพื่อเปรียบเทียบแผนประกัน</span>
-                  </>
-                )}
-              </button>
-            </form>
+              </>
+            )}
           </div>
         </div>
       </div>
