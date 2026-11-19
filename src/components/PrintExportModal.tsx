@@ -32,7 +32,9 @@ interface PrintExportModalProps {
   saleSheetType: InsuranceType;
   setSaleSheetType: (t: InsuranceType) => void;
   customerName: string;
+  setCustomerName?: (v: string) => void;
   advisorName: string;
+  setAdvisorName?: (v: string) => void;
 }
 
 export const PrintExportModal: React.FC<PrintExportModalProps> = ({
@@ -44,7 +46,9 @@ export const PrintExportModal: React.FC<PrintExportModalProps> = ({
   saleSheetType,
   setSaleSheetType,
   customerName,
+  setCustomerName,
   advisorName,
+  setAdvisorName,
 }) => {
   const [printBlockedHint, setPrintBlockedHint] = useState(false);
 
@@ -150,10 +154,10 @@ export const PrintExportModal: React.FC<PrintExportModalProps> = ({
       onClick={onClose}
     >
       <div
-        className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white shadow-xl overflow-hidden"
+        className="w-full max-w-lg max-h-[92vh] flex flex-col rounded-2xl border border-slate-200 bg-white shadow-xl overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className={`flex items-start justify-between gap-3 ${themeHeaderBg} px-5 py-4 text-white transition-colors`}>
+        <div className={`flex shrink-0 items-start justify-between gap-3 ${themeHeaderBg} px-5 py-4 text-white transition-colors`}>
           <div>
             <h3 id="print-modal-title" className="text-base font-bold">
               {isSaleSheet
@@ -176,7 +180,7 @@ export const PrintExportModal: React.FC<PrintExportModalProps> = ({
           </button>
         </div>
 
-        <div className="p-5 space-y-4">
+        <div className="p-5 space-y-4 overflow-y-auto">
           {/* Separated Color-Coded Document Selector */}
           <div className="space-y-1.5">
             <p className="text-[11px] font-semibold text-slate-500">
@@ -266,6 +270,26 @@ export const PrintExportModal: React.FC<PrintExportModalProps> = ({
               </span>
             </div>
           </div>
+
+          {/* Optional Customer Name Field for Sale Sheet */}
+          {isSaleSheet && !isMltaAgeOver && setCustomerName && (
+            <div>
+              <label
+                htmlFor="modal-sale-sheet-customer"
+                className="block text-[11px] font-medium text-slate-600 mb-1"
+              >
+                ชื่อผู้ขอเอาประกันภัย / ลูกค้า (ไม่บังคับ)
+              </label>
+              <input
+                id="modal-sale-sheet-customer"
+                type="text"
+                value={customerName}
+                onChange={(e) => setCustomerName(e.target.value)}
+                placeholder="เว้นว่างสำหรับกรอกมือ หรือพิมพ์ชื่อลูกค้า"
+                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-900 placeholder:text-slate-400 focus:border-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+              />
+            </div>
+          )}
 
           {isMltaAgeOver && (
             <div

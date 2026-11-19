@@ -24,7 +24,7 @@
 
   @page saleSheet {
     size: A4 portrait;
-    margin: 6mm 7mm;
+    margin: 5mm 6mm;
   }
 
   .print-sale-sheet-page {

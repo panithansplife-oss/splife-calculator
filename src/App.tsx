@@ -417,7 +417,9 @@ export default function App() {
         saleSheetType={saleSheetType}
         setSaleSheetType={setSaleSheetType}
         customerName={customerName}
+        setCustomerName={setCustomerName}
         advisorName={advisorName}
+        setAdvisorName={setAdvisorName}
       />
     </div>
   );

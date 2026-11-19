@@ -16,6 +16,24 @@ export const MLTA_OVERLAY_POSITIONS = {
   premium: { left: '37.3%', width: '19.3%', bottom: '31.4%' },
 } as const;
 
+export const MRTA_OFFICIAL_IMAGE_ASSETS = {
+  front: '/assets/aistudio/image_1231948992_0_b7bf6cbe.jpg',
+  back: '/assets/aistudio/image_1231948992_1_ecc32153.jpg',
+  frontWidth: 1409,
+  frontHeight: 2030,
+  backWidth: 1394,
+  backHeight: 2016,
+} as const;
+
+export const MRTA_OVERLAY_POSITIONS = {
+  customerName: { left: '7.0%', width: '56.6%', bottom: '79.6%' },
+  age: { left: '67.4%', width: '12.6%', bottom: '79.6%' },
+  gender: { left: '85.4%', width: '10.0%', bottom: '79.6%' },
+  term: { left: '90.1%', width: '5.5%', bottom: '76.1%' },
+  sumAssured: { left: '67.6%', width: '17.9%', bottom: '47.5%' },
+  premium: { left: '38.4%', width: '19.3%', bottom: '40.6%' },
+} as const;
+
 export async function fetchImageAsDataUrl(src: string): Promise<string> {
   if (typeof window === 'undefined' || typeof fetch === 'undefined') {
     return src;
