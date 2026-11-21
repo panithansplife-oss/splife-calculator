@@ -100,6 +100,10 @@ export default function App() {
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-2 sm:gap-8 px-3 sm:px-6 lg:px-8 h-16">
           <a
             href="#calculator-section"
+            onClick={(e) => {
+              e.preventDefault();
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
             className="inline-flex items-center gap-2.5 tracking-tight whitespace-nowrap shrink-0 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700"
           >
             <img
@@ -451,7 +455,7 @@ export default function App() {
       {/* Quiet Footer */}
       <footer className="border-t border-slate-200 bg-white py-5 text-center text-xs text-slate-500 print:hidden">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <span>โปรแกรมคำนวณเบี้ยประกันภัยคุ้มครองสินเชื่อ (MLTA / MRTA) · ธ.ก.ส. SPLife และพันธมิตร</span>
+          <span>โปรแกรมคำนวณเบี้ยประกันภัยคุ้มครองสินเชื่อ (MLTA / MRTA) · SPLife และพันธมิตร</span>
           <span>หมายเหตุ: ค่าที่กรอกทุกช่องต้องเป็นตัวเลขจำนวนเต็มเท่านั้น</span>
         </div>
       </footer>

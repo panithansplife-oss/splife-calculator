@@ -118,7 +118,7 @@ export const CalculatorWorkspace: React.FC<CalculatorWorkspaceProps> = ({
           </div>
 
           {/* 1. Gender */}
-          <div className="space-y-2">
+          <div id="gender-input-section" className="space-y-2 scroll-mt-24">
             <label className="block text-sm font-semibold text-slate-800">
               เพศผู้เอาประกัน
             </label>
@@ -443,7 +443,6 @@ export const CalculatorWorkspace: React.FC<CalculatorWorkspaceProps> = ({
                   ผลการคำนวณเบี้ยประกัน (
                   {insuranceType === 'mrta' ? 'MRTA ทุนลดลง' : 'MLTA ทุนคงที่'})
                 </span>
-                <span className="truncate">รับประกันโดย SP Life และพันธมิตร</span>
               </div>
 
               {result.isValid && result.totalPremium !== null ? (

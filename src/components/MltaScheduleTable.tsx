@@ -45,6 +45,30 @@ export const MltaScheduleTable: React.FC<MltaScheduleTableProps> = ({
     }
   };
 
+  const handleScrollToGender = () => {
+    const el = document.getElementById('gender-input-section');
+    if (!el) return;
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    const targetBtn = el.querySelector<HTMLButtonElement>(
+      'button[role="radio"][aria-checked="true"], button[role="radio"]'
+    );
+    targetBtn?.focus({ preventScroll: true });
+  };
+
+  const handleScrollToSumAssured = () => {
+    const el = document.getElementById('sum-assured-input') as HTMLInputElement | null;
+    if (!el) return;
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    el.focus({ preventScroll: true });
+  };
+
+  const handleScrollToBirthYear = () => {
+    const el = document.getElementById('birth-year-input') as HTMLInputElement | null;
+    if (!el) return;
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    el.focus({ preventScroll: true });
+  };
+
   const renderMatrixTable = (
     rows: MltaBandRow[],
     terms: readonly number[],
@@ -211,17 +235,37 @@ export const MltaScheduleTable: React.FC<MltaScheduleTableProps> = ({
 
         {/* Parameter Strip */}
         <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs print:grid-cols-4 print:gap-2 print:mt-1.5 print:text-[10px]">
-          <div className="rounded-lg border border-slate-200 bg-white px-3 py-2 print:py-1">
+          <div
+            role="button"
+            tabIndex={0}
+            onClick={handleScrollToGender}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                handleScrollToGender();
+              }
+            }}
+            title="คลิกเพื่อเลื่อนไปเลือกเพศผู้เอาประกัน"
+            className="cursor-pointer rounded-lg border border-slate-200 bg-white px-3 py-2 transition-colors hover:border-emerald-500 hover:bg-emerald-50/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 print:cursor-default print:py-1 print:hover:border-slate-200 print:hover:bg-white"
+          >
             <span className="text-slate-500">เพศ: </span>
-            {hasReadyData ? (
-              <span className="font-bold text-slate-900">
-                {result.gender === 'male' ? 'ชาย' : 'หญิง'}
-              </span>
-            ) : (
-              <span className="font-medium text-slate-400">กรุณาใส่ข้อมูลด้านบน</span>
-            )}
+            <span className="font-bold text-slate-900">
+              {result.gender === 'male' ? 'ชาย' : 'หญิง'}
+            </span>
           </div>
-          <div className="rounded-lg border border-slate-200 bg-white px-3 py-2 print:py-1">
+          <div
+            role="button"
+            tabIndex={0}
+            onClick={handleScrollToSumAssured}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                handleScrollToSumAssured();
+              }
+            }}
+            title="คลิกเพื่อเลื่อนไปกรอกทุนประกัน"
+            className="cursor-pointer rounded-lg border border-slate-200 bg-white px-3 py-2 transition-colors hover:border-emerald-500 hover:bg-emerald-50/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 print:cursor-default print:py-1 print:hover:border-slate-200 print:hover:bg-white"
+          >
             <span className="text-slate-500">ทุนประกัน: </span>
             {hasValidSum ? (
               <span className="font-mono font-bold tabular-nums text-slate-900">
@@ -231,7 +275,19 @@ export const MltaScheduleTable: React.FC<MltaScheduleTableProps> = ({
               <span className="font-medium text-slate-400">กรุณาใส่ข้อมูลด้านบน</span>
             )}
           </div>
-          <div className="rounded-lg border border-slate-200 bg-white px-3 py-2 print:py-1">
+          <div
+            role="button"
+            tabIndex={0}
+            onClick={handleScrollToBirthYear}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                handleScrollToBirthYear();
+              }
+            }}
+            title="คลิกเพื่อเลื่อนไปกรอกปีเกิด (พ.ศ.)"
+            className="cursor-pointer rounded-lg border border-slate-200 bg-white px-3 py-2 transition-colors hover:border-emerald-500 hover:bg-emerald-50/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 print:cursor-default print:py-1 print:hover:border-slate-200 print:hover:bg-white"
+          >
             <span className="text-slate-500">ปีเกิด (พ.ศ.): </span>
             {highlightedAge !== null && result.birthYearBE !== null ? (
               <span className="font-mono font-bold tabular-nums text-slate-900">
