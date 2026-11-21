@@ -16,7 +16,6 @@ import {
   formatIntegerInput,
   getMltaCustomerTerms,
 } from '../utils/insuranceCalculator';
-import { PartnerHeader } from './PartnerHeader';
 
 interface CalculatorWorkspaceProps {
   insuranceType: InsuranceType;
@@ -100,9 +99,6 @@ export const CalculatorWorkspace: React.FC<CalculatorWorkspaceProps> = ({
 
   return (
     <section aria-label="เครื่องคำนวณเบี้ยประกันคุ้มครองสินเชื่อระยะยาว" className="space-y-6">
-      {/* Insurer Header Title Strip */}
-      <PartnerHeader />
-
       {/* Main 2-Column Calculator Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left Column: Input Parameters */}

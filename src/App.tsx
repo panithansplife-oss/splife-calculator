@@ -5,6 +5,7 @@ import {
 import { MltaDetailsSection } from './components/MltaDetailsSection';
 import { MltaScheduleTable } from './components/MltaScheduleTable';
 import { MrtaScheduleTable } from './components/MrtaScheduleTable';
+import { PartnerHeader } from './components/PartnerHeader';
 import { PrintExportModal, type PrintTarget } from './components/PrintExportModal';
 import { SaleSheetSection } from './components/SaleSheetSection';
 import {
@@ -96,13 +97,21 @@ export default function App() {
     <div className="min-h-screen flex flex-col bg-[#F6F8F6] text-slate-900">
       {/* Top Navigation Bar (3-zone contract) */}
       <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur-xs print:hidden">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-8 px-4 sm:px-6 lg:px-8 h-16">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-2 sm:gap-8 px-3 sm:px-6 lg:px-8 h-16">
           <a
             href="#calculator-section"
-            className="inline-flex items-baseline gap-1.5 tracking-tight text-[#0A6C45] whitespace-nowrap shrink-0"
+            className="inline-flex items-center gap-2.5 tracking-tight whitespace-nowrap shrink-0 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700"
           >
-            <span className="text-xl sm:text-2xl font-extrabold">SPLife</span>
-            <span className="text-sm sm:text-base font-semibold text-emerald-800/85">
+            <img
+              src="/assets/aistudio/image_1169267376_0_e024bb27.jpg"
+              alt="SPlife ประกันชีวิตคุ้มครองสินเชื่อ"
+              className="w-[131px] h-[66px] object-contain mix-blend-multiply"
+            />
+            <span
+              className="hidden sm:inline-block h-7 w-px bg-emerald-900/15"
+              aria-hidden="true"
+            />
+            <span className="hidden sm:inline text-sm font-semibold tracking-tight text-emerald-900/80">
               Credit Shield
             </span>
           </a>
@@ -124,12 +133,6 @@ export default function App() {
               ตารางเบี้ยประกัน
             </a>
             <a
-              href="#sale-sheet-section"
-              className="hover:text-slate-900 transition-colors whitespace-nowrap shrink-0"
-            >
-              Sale Sheet
-            </a>
-            <a
               href="#rules-section"
               className="hover:text-slate-900 transition-colors whitespace-nowrap shrink-0"
             >
@@ -143,20 +146,26 @@ export default function App() {
             </a>
           </nav>
 
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             <button
               type="button"
               onClick={() => handleRequestPrint('schedule')}
-              className="rounded-lg bg-sky-700 px-3.5 py-2 text-xs font-semibold text-white hover:bg-sky-800 transition-colors whitespace-nowrap shrink-0"
+              className="rounded-lg bg-sky-700 px-2 py-1.5 sm:px-3.5 sm:py-2 text-[11px] sm:text-xs font-semibold text-white hover:bg-sky-800 transition-colors whitespace-nowrap shrink-0"
             >
-              {insuranceType === 'mrta' ? 'พิมพ์ตาราง MRTA' : 'พิมพ์ตาราง MLTA'}
+              <span className="sm:hidden">พิมพ์ตาราง</span>
+              <span className="hidden sm:inline">
+                {insuranceType === 'mrta' ? 'พิมพ์ตาราง MRTA' : 'พิมพ์ตาราง MLTA'}
+              </span>
             </button>
             <button
               type="button"
               onClick={() => handleRequestPrint('sale-sheet', insuranceType)}
-              className="rounded-lg bg-amber-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-amber-700 transition-colors whitespace-nowrap shrink-0"
+              className="rounded-lg bg-amber-600 px-2 py-1.5 sm:px-3.5 sm:py-2 text-[11px] sm:text-xs font-semibold text-white hover:bg-amber-700 transition-colors whitespace-nowrap shrink-0"
             >
-              {insuranceType === 'mrta' ? 'พิมพ์ Sale Sheet MRTA' : 'พิมพ์ Sale Sheet MLTA'}
+              <span className="sm:hidden">Sale Sheet</span>
+              <span className="hidden sm:inline">
+                {insuranceType === 'mrta' ? 'พิมพ์ Sale Sheet MRTA' : 'พิมพ์ Sale Sheet MLTA'}
+              </span>
             </button>
           </div>
         </div>
@@ -217,7 +226,7 @@ export default function App() {
           <div
             role="tablist"
             aria-label="เลือกแบบประกันภัยคุ้มครองสินเชื่อ"
-            className="grid grid-cols-1 sm:grid-cols-2 gap-3"
+            className="grid grid-cols-2 gap-2 sm:gap-3"
           >
             <button
               type="button"
@@ -228,34 +237,51 @@ export default function App() {
                 setSaleSheetType('mlta');
                 setTermInput('');
               }}
-              className={`group text-left rounded-2xl border-2 px-5 py-4 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700 focus-visible:ring-offset-2 ${
+              className={`group text-left rounded-xl sm:rounded-2xl border-2 px-3 py-2.5 sm:px-5 sm:py-4 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700 focus-visible:ring-offset-2 ${
                 insuranceType === 'mlta'
                   ? 'border-[#0F2A1E] bg-[#0F2A1E] text-white shadow-sm'
                   : 'border-slate-200 bg-white text-slate-900 hover:border-emerald-600/60 hover:bg-emerald-50/30'
               }`}
             >
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-base sm:text-lg font-bold tracking-tight">
-                  แบบทุนคงที่ (M
-                  <span className={insuranceType === 'mlta' ? 'text-red-400' : 'text-red-600'}>
-                    L
+              <div className="flex items-center justify-between gap-1.5 sm:gap-2">
+                <span className="text-[15px] sm:text-lg font-extrabold sm:font-bold tracking-tight leading-tight">
+                  <span className="sm:hidden">
+                    M
+                    <span className={insuranceType === 'mlta' ? 'text-red-400' : 'text-red-600'}>
+                      L
+                    </span>
+                    TA
                   </span>
-                  TA)
+                  <span className="hidden sm:inline">
+                    แบบทุนคงที่ (M
+                    <span className={insuranceType === 'mlta' ? 'text-red-400' : 'text-red-600'}>
+                      L
+                    </span>
+                    TA)
+                  </span>
                 </span>
                 <span
-                  className={`text-xs font-semibold whitespace-nowrap shrink-0 ${
+                  className={`text-[10px] sm:text-xs font-semibold whitespace-nowrap shrink-0 ${
                     insuranceType === 'mlta' ? 'text-emerald-300' : 'text-slate-400'
                   }`}
                 >
-                  {insuranceType === 'mlta' ? 'กำลังเลือกใช้งาน' : 'คลิกเพื่อเลือก'}
+                  <span className="sm:hidden">
+                    {insuranceType === 'mlta' ? 'กำลังใช้งาน' : 'แตะเลือก'}
+                  </span>
+                  <span className="hidden sm:inline">
+                    {insuranceType === 'mlta' ? 'กำลังเลือกใช้งาน' : 'คลิกเพื่อเลือก'}
+                  </span>
                 </span>
               </div>
               <p
-                className={`mt-1 text-xs ${
+                className={`mt-0.5 sm:mt-1 text-[11px] sm:text-xs leading-snug ${
                   insuranceType === 'mlta' ? 'text-emerald-100/90' : 'text-slate-500'
                 }`}
               >
-                ทุนประกันคงที่ตลอดสัญญา · อายุ 20–65 ปี · ระยะเวลา 1–30 ปี (รวมอายุไม่เกิน 70 ปี)
+                <span className="sm:hidden">แบบทุนคงที่ · อายุ 20–65 ปี</span>
+                <span className="hidden sm:inline">
+                  ทุนประกันคงที่ตลอดสัญญา · อายุ 20–65 ปี · ระยะเวลา 1–30 ปี (รวมอายุไม่เกิน 70 ปี)
+                </span>
               </p>
             </button>
 
@@ -268,34 +294,51 @@ export default function App() {
                 setSaleSheetType('mrta');
                 setTermInput('');
               }}
-              className={`group text-left rounded-2xl border-2 px-5 py-4 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700 focus-visible:ring-offset-2 ${
+              className={`group text-left rounded-xl sm:rounded-2xl border-2 px-3 py-2.5 sm:px-5 sm:py-4 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700 focus-visible:ring-offset-2 ${
                 insuranceType === 'mrta'
                   ? 'border-[#0F2A1E] bg-[#0F2A1E] text-white shadow-sm'
                   : 'border-slate-200 bg-white text-slate-900 hover:border-emerald-600/60 hover:bg-emerald-50/30'
               }`}
             >
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-base sm:text-lg font-bold tracking-tight">
-                  แบบทุนลดลง (M
-                  <span className={insuranceType === 'mrta' ? 'text-red-400' : 'text-red-600'}>
-                    R
+              <div className="flex items-center justify-between gap-1.5 sm:gap-2">
+                <span className="text-[15px] sm:text-lg font-extrabold sm:font-bold tracking-tight leading-tight">
+                  <span className="sm:hidden">
+                    M
+                    <span className={insuranceType === 'mrta' ? 'text-red-400' : 'text-red-600'}>
+                      R
+                    </span>
+                    TA
                   </span>
-                  TA)
+                  <span className="hidden sm:inline">
+                    แบบทุนลดลง (M
+                    <span className={insuranceType === 'mrta' ? 'text-red-400' : 'text-red-600'}>
+                      R
+                    </span>
+                    TA)
+                  </span>
                 </span>
                 <span
-                  className={`text-xs font-semibold whitespace-nowrap shrink-0 ${
+                  className={`text-[10px] sm:text-xs font-semibold whitespace-nowrap shrink-0 ${
                     insuranceType === 'mrta' ? 'text-emerald-300' : 'text-slate-400'
                   }`}
                 >
-                  {insuranceType === 'mrta' ? 'กำลังเลือกใช้งาน' : 'คลิกเพื่อเลือก'}
+                  <span className="sm:hidden">
+                    {insuranceType === 'mrta' ? 'กำลังใช้งาน' : 'แตะเลือก'}
+                  </span>
+                  <span className="hidden sm:inline">
+                    {insuranceType === 'mrta' ? 'กำลังเลือกใช้งาน' : 'คลิกเพื่อเลือก'}
+                  </span>
                 </span>
               </div>
               <p
-                className={`mt-1 text-xs ${
+                className={`mt-0.5 sm:mt-1 text-[11px] sm:text-xs leading-snug ${
                   insuranceType === 'mrta' ? 'text-emerald-100/90' : 'text-slate-500'
                 }`}
               >
-                ทุนประกันลดลงตามระยะเวลา · อายุ 20–70 ปี · ระยะเวลา 1–30 ปี (รวมอายุไม่เกิน 75 ปี)
+                <span className="sm:hidden">แบบทุนลดลง · อายุ 20–70 ปี</span>
+                <span className="hidden sm:inline">
+                  ทุนประกันลดลงตามระยะเวลา · อายุ 20–70 ปี · ระยะเวลา 1–30 ปี (รวมอายุไม่เกิน 75 ปี)
+                </span>
               </p>
             </button>
           </div>
@@ -351,6 +394,11 @@ export default function App() {
           onRequestPrintSaleSheet={(targetType) => handleRequestPrint('sale-sheet', targetType)}
           isPrintTarget={printTarget === 'sale-sheet'}
         />
+
+        {/* Partner Insurers Strip (below schedule, above conditions) */}
+        <div className="print:hidden">
+          <PartnerHeader />
+        </div>
 
         {/* Underwriting Conditions Reference */}
         <section
