@@ -4,20 +4,21 @@ import {
   BookOpen,
   FileText,
   HeartHandshake,
+  Minus,
+  Plus,
   ShieldAlert,
   ShieldCheck,
 } from 'lucide-react';
 
 import type { InsuranceType } from '../utils/insuranceCalculator';
 
-type DetailTab = 'all' | 'underwriting' | 'benefits' | 'definitions' | 'exclusions';
+type DetailSectionId = 'underwriting' | 'benefits' | 'definitions' | 'exclusions';
 
-const TAB_ITEMS: { id: DetailTab; label: string }[] = [
-  { id: 'all', label: 'แสดงทั้งหมด (4 หมวด)' },
-  { id: 'underwriting', label: '1. ข้อกำหนดการรับประกันชีวิต' },
-  { id: 'benefits', label: '2. ผลประโยชน์ความคุ้มครอง' },
-  { id: 'definitions', label: '3. คำนิยาม ความคุ้มครอง' },
-  { id: 'exclusions', label: '4. ข้อยกเว้นความคุ้มครอง' },
+const SECTION_IDS: DetailSectionId[] = [
+  'underwriting',
+  'benefits',
+  'definitions',
+  'exclusions',
 ];
 
 interface MltaDetailsSectionProps {
@@ -27,11 +28,32 @@ interface MltaDetailsSectionProps {
 export const MltaDetailsSection: React.FC<MltaDetailsSectionProps> = ({
   insuranceType = 'mlta',
 }) => {
-  const [activeTab, setActiveTab] = useState<DetailTab>('all');
-  const isMrta = insuranceType === 'mrta';
+  const [openSections, setOpenSections] = useState<Record<DetailSectionId, boolean>>({
+    underwriting: false,
+    benefits: false,
+    definitions: false,
+    exclusions: false,
+  });
 
-  const showSection = (section: Exclude<DetailTab, 'all'>) =>
-    activeTab === 'all' || activeTab === section;
+  const isMrta = insuranceType === 'mrta';
+  const allOpen = SECTION_IDS.every((id) => openSections[id]);
+
+  const toggleSection = (id: DetailSectionId) => {
+    setOpenSections((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  };
+
+  const handleToggleAll = () => {
+    const nextState = !allOpen;
+    setOpenSections({
+      underwriting: nextState,
+      benefits: nextState,
+      definitions: nextState,
+      exclusions: nextState,
+    });
+  };
 
   return (
     <section
@@ -43,14 +65,14 @@ export const MltaDetailsSection: React.FC<MltaDetailsSectionProps> = ({
       }
       className="rounded-2xl border border-slate-200 bg-white overflow-hidden"
     >
-      {/* Section Header & Filter Tabs */}
-      <div className="bg-[#0F2A1E] text-white px-5 py-6 sm:px-7">
-        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
-          <div className="space-y-1.5">
+      {/* Compact Section Header */}
+      <div className="bg-[#0F2A1E] text-white px-5 py-4 sm:px-7 sm:py-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="space-y-1">
             <p className="text-xs font-medium text-emerald-300 tracking-wide">
-              รายละเอียดกรมธรรม์และเงื่อนไขความคุ้มครอง
+              รายละเอียดกรมธรรม์และเงื่อนไขความคุ้มครอง (คลิก + เพื่อดูรายละเอียด)
             </p>
-            <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white text-balance">
+            <h2 className="text-lg sm:text-xl font-bold tracking-tight text-white text-balance">
               โครงการประกันชีวิตคุ้มครองสินเชื่อ{' '}
               {isMrta ? (
                 <>
@@ -65,303 +87,394 @@ export const MltaDetailsSection: React.FC<MltaDetailsSectionProps> = ({
               )}
             </h2>
           </div>
-        </div>
 
-        {/* Interactive Tab Selector */}
-        <div
-          role="tablist"
-          aria-label="หมวดหมู่รายละเอียดความคุ้มครอง MLTA"
-          className="mt-5 flex flex-wrap gap-1.5"
-        >
-          {TAB_ITEMS.map((tab) => {
-            const isActive = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                role="tab"
-                aria-selected={isActive}
-                onClick={() => setActiveTab(tab.id)}
-                className={`rounded-lg px-3.5 py-2 text-xs font-semibold transition-colors whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 ${
-                  isActive
-                    ? 'bg-emerald-500 text-[#0A1F15]'
-                    : 'bg-white/10 text-emerald-100 hover:bg-white/20 hover:text-white'
-                }`}
-              >
-                {tab.label}
-              </button>
-            );
-          })}
+          <button
+            type="button"
+            onClick={handleToggleAll}
+            className="inline-flex items-center self-start sm:self-auto gap-1.5 rounded-lg border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-semibold text-emerald-100 hover:bg-white/20 hover:text-white transition-colors whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
+          >
+            {allOpen ? (
+              <>
+                <Minus className="h-3.5 w-3.5" aria-hidden="true" />
+                <span>พับทั้งหมด</span>
+              </>
+            ) : (
+              <>
+                <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+                <span>เปิดดูทั้งหมด</span>
+              </>
+            )}
+          </button>
         </div>
       </div>
 
-      {/* Content Sections separated cleanly with hairline dividers */}
+      {/* Collapsible +/- Accordion List */}
       <div className="divide-y divide-slate-200">
         {/* 1. ข้อกำหนดการรับประกันชีวิต */}
-        {showSection('underwriting') && (
-          <div className="p-5 sm:p-7 space-y-5">
-            <div className="flex items-center gap-2.5">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200">
-                <FileText className="h-4.5 w-4.5" aria-hidden="true" />
-              </div>
-              <div>
-                <h3 className="text-base sm:text-lg font-bold text-slate-900">
-                  01. ข้อกำหนดการรับประกันชีวิต
+        <div>
+          <button
+            type="button"
+            id="accordion-trigger-underwriting"
+            aria-expanded={openSections.underwriting}
+            aria-controls="accordion-panel-underwriting"
+            onClick={() => toggleSection('underwriting')}
+            className={`flex w-full items-center gap-3.5 px-5 py-4 sm:px-7 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-emerald-700 ${
+              openSections.underwriting
+                ? 'bg-emerald-50/50 hover:bg-emerald-50/70'
+                : 'bg-white hover:bg-slate-50/90'
+            }`}
+          >
+            <span
+              className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md transition-colors ${
+                openSections.underwriting
+                  ? 'bg-[#0F2A1E] text-white'
+                  : 'bg-slate-100 text-slate-800'
+              }`}
+            >
+              {openSections.underwriting ? (
+                <Minus className="h-4 w-4 stroke-[2.5]" aria-hidden="true" />
+              ) : (
+                <Plus className="h-4 w-4 stroke-[2.5]" aria-hidden="true" />
+              )}
+            </span>
+            <div className="flex min-w-0 flex-1 items-center gap-2.5">
+              <FileText
+                className="h-4 w-4 shrink-0 text-emerald-700 hidden sm:block"
+                aria-hidden="true"
+              />
+              <div className="min-w-0">
+                <h3 className="text-sm sm:text-base font-bold text-slate-900">
+                  1. ข้อกำหนดการรับประกันชีวิต
                 </h3>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-slate-500 truncate">
                   เงื่อนไขคุณสมบัติ วงเงินเอาประกันภัย และวิธีการชำระเบี้ยประกันภัย
                 </p>
               </div>
             </div>
+          </button>
 
-            <div className="overflow-x-auto rounded-xl border border-slate-200">
-              <table className="w-full text-left border-collapse text-sm">
-                <thead>
-                  <tr className="bg-[#115E3B] text-white">
-                    <th className="py-3 px-4 font-semibold w-full sm:w-[34%] border-b border-emerald-800">
-                      หัวข้อ
-                    </th>
-                    <th className="py-3 px-4 font-semibold border-b border-emerald-800">
-                      รายละเอียด
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-200 bg-white text-slate-700">
-                  <tr className="hover:bg-slate-50/70 transition-colors">
-                    <th
-                      scope="row"
-                      className="py-3.5 px-4 font-semibold text-slate-900 align-top bg-slate-50/60"
-                    >
-                      คุณสมบัติผู้เอาประกันภัย
-                    </th>
-                    <td className="py-3.5 px-4 leading-relaxed">
-                      <ul className="list-disc pl-5 space-y-1.5 marker:text-emerald-700">
-                        <li>
-                          อายุ{' '}
-                          <span className="font-semibold text-red-600 tabular-nums">
-                            {isMrta ? '20–70 ปี' : '20–65 ปี'}
-                          </span>{' '}
-                          รวมระยะเวลาผ่อนชำระหนี้สินไม่เกินอายุ{' '}
-                          <span className="font-semibold text-red-600 tabular-nums">
-                            {isMrta ? '75 ปี' : '70 ปี'}
-                          </span>
-                        </li>
-                        <li>
-                          เป็น
-                          <span className="font-semibold text-red-600">
-                            ลูกค้าผู้กู้เงิน
-                          </span>
-                          ของธนาคารเพื่อการเกษตรและสหกรณ์การเกษตร
-                        </li>
-                      </ul>
-                    </td>
-                  </tr>
+          {openSections.underwriting && (
+            <div
+              id="accordion-panel-underwriting"
+              role="region"
+              aria-labelledby="accordion-trigger-underwriting"
+              className="border-t border-slate-100 bg-white px-5 py-5 sm:px-7 sm:py-6"
+            >
+              <div className="overflow-x-auto rounded-xl border border-slate-200">
+                <table className="w-full text-left border-collapse text-sm">
+                  <thead>
+                    <tr className="bg-[#115E3B] text-white">
+                      <th className="py-3 px-4 font-semibold w-full sm:w-[34%] border-b border-emerald-800">
+                        หัวข้อ
+                      </th>
+                      <th className="py-3 px-4 font-semibold border-b border-emerald-800">
+                        รายละเอียด
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200 bg-white text-slate-700">
+                    <tr className="hover:bg-slate-50/70 transition-colors">
+                      <th
+                        scope="row"
+                        className="py-3.5 px-4 font-semibold text-slate-900 align-top bg-slate-50/60"
+                      >
+                        คุณสมบัติผู้เอาประกันภัย
+                      </th>
+                      <td className="py-3.5 px-4 leading-relaxed">
+                        <ul className="list-disc pl-5 space-y-1.5 marker:text-emerald-700">
+                          <li>
+                            อายุ{' '}
+                            <span className="font-semibold text-red-600 tabular-nums">
+                              {isMrta ? '20–70 ปี' : '20–65 ปี'}
+                            </span>{' '}
+                            รวมระยะเวลาผ่อนชำระหนี้สินไม่เกินอายุ{' '}
+                            <span className="font-semibold text-red-600 tabular-nums">
+                              {isMrta ? '75 ปี' : '70 ปี'}
+                            </span>
+                          </li>
+                          <li>
+                            เป็น
+                            <span className="font-semibold text-red-600">
+                              ลูกค้าผู้กู้เงิน
+                            </span>
+                            ของธนาคารเพื่อการเกษตรและสหกรณ์การเกษตร
+                          </li>
+                        </ul>
+                      </td>
+                    </tr>
 
-                  <tr className="hover:bg-slate-50/70 transition-colors">
-                    <th
-                      scope="row"
-                      className="py-3.5 px-4 font-semibold text-slate-900 align-top bg-slate-50/60"
-                    >
-                      ระยะเวลาเอาประกันภัย
-                    </th>
-                    <td className="py-3.5 px-4 leading-relaxed">
-                      <span className="font-semibold text-red-600 tabular-nums">
-                        1 – 30 ปี
-                      </span>{' '}
-                      และต้องไม่เกินกว่าระยะเวลากู้ยืมเงินตามสัญญากู้
-                    </td>
-                  </tr>
+                    <tr className="hover:bg-slate-50/70 transition-colors">
+                      <th
+                        scope="row"
+                        className="py-3.5 px-4 font-semibold text-slate-900 align-top bg-slate-50/60"
+                      >
+                        ระยะเวลาเอาประกันภัย
+                      </th>
+                      <td className="py-3.5 px-4 leading-relaxed">
+                        <span className="font-semibold text-red-600 tabular-nums">
+                          1 – 30 ปี
+                        </span>{' '}
+                        และต้องไม่เกินกว่าระยะเวลากู้ยืมเงินตามสัญญากู้
+                      </td>
+                    </tr>
 
-                  <tr className="hover:bg-slate-50/70 transition-colors">
-                    <th
-                      scope="row"
-                      className="py-3.5 px-4 font-semibold text-slate-900 align-top bg-slate-50/60"
-                    >
-                      จำนวนเงินเอาประกันภัยขั้นต่ำ (บาท)
-                    </th>
-                    <td className="py-3.5 px-4 leading-relaxed">
-                      <span className="font-semibold text-red-600 tabular-nums">
-                        50,000 บาท
-                      </span>{' '}
-                      (ไม่เกินวงเงินสินเชื่อที่ได้รับอนุมัติ)
-                    </td>
-                  </tr>
+                    <tr className="hover:bg-slate-50/70 transition-colors">
+                      <th
+                        scope="row"
+                        className="py-3.5 px-4 font-semibold text-slate-900 align-top bg-slate-50/60"
+                      >
+                        จำนวนเงินเอาประกันภัยขั้นต่ำ (บาท)
+                      </th>
+                      <td className="py-3.5 px-4 leading-relaxed">
+                        <span className="font-semibold text-red-600 tabular-nums">
+                          50,000 บาท
+                        </span>{' '}
+                        (ไม่เกินวงเงินสินเชื่อที่ได้รับอนุมัติ)
+                      </td>
+                    </tr>
 
-                  <tr className="hover:bg-slate-50/70 transition-colors">
-                    <th
-                      scope="row"
-                      className="py-3.5 px-4 font-semibold text-slate-900 align-top bg-slate-50/60"
-                    >
-                      จำนวนเงินเอาประกันภัยสูงสุด (ต่อราย)
-                    </th>
-                    <td className="py-3.5 px-4 leading-relaxed">
-                      <ul className="list-disc pl-5 space-y-1.5 marker:text-emerald-700">
-                        <li>
-                          <span className="font-semibold text-red-600 tabular-nums">
-                            Life สูงสุด 150
-                          </span>{' '}
-                          ล้านบาท รวมสินค้า CL ทุกแบบและทุกช่องทาง
-                        </li>
-                        <li>
-                          <span className="font-semibold text-red-600 tabular-nums">
-                            TPD สูงสุด 150
-                          </span>{' '}
-                          ล้านบาท รวมสินค้า CL ทุกแบบและทุกช่องทาง
-                        </li>
-                      </ul>
-                    </td>
-                  </tr>
+                    <tr className="hover:bg-slate-50/70 transition-colors">
+                      <th
+                        scope="row"
+                        className="py-3.5 px-4 font-semibold text-slate-900 align-top bg-slate-50/60"
+                      >
+                        จำนวนเงินเอาประกันภัยสูงสุด (ต่อราย)
+                      </th>
+                      <td className="py-3.5 px-4 leading-relaxed">
+                        <ul className="list-disc pl-5 space-y-1.5 marker:text-emerald-700">
+                          <li>
+                            <span className="font-semibold text-red-600 tabular-nums">
+                              Life สูงสุด 150
+                            </span>{' '}
+                            ล้านบาท รวมสินค้า CL ทุกแบบและทุกช่องทาง
+                          </li>
+                          <li>
+                            <span className="font-semibold text-red-600 tabular-nums">
+                              TPD สูงสุด 150
+                            </span>{' '}
+                            ล้านบาท รวมสินค้า CL ทุกแบบและทุกช่องทาง
+                          </li>
+                        </ul>
+                      </td>
+                    </tr>
 
-                  <tr className="hover:bg-slate-50/70 transition-colors">
-                    <th
-                      scope="row"
-                      className="py-3.5 px-4 font-semibold text-slate-900 align-top bg-slate-50/60"
-                    >
-                      การชำระเบี้ยประกันภัย
-                    </th>
-                    <td className="py-3.5 px-4 leading-relaxed">
-                      เป็นแบบ
-                      <span className="font-semibold text-red-600">
-                        ชำระครั้งเดียว
-                      </span>
-                      คุ้มครองตลอดระยะสัญญา ทั้งนี้เบี้ยประกันภัยจะขึ้นอยู่กับ เพศ
-                      อายุ จำนวนเงินเอาประกันภัย และระยะเวลาเอาประกันภัยของแต่ละบุคคล
-                    </td>
-                  </tr>
+                    <tr className="hover:bg-slate-50/70 transition-colors">
+                      <th
+                        scope="row"
+                        className="py-3.5 px-4 font-semibold text-slate-900 align-top bg-slate-50/60"
+                      >
+                        การชำระเบี้ยประกันภัย
+                      </th>
+                      <td className="py-3.5 px-4 leading-relaxed">
+                        เป็นแบบ
+                        <span className="font-semibold text-red-600">
+                          ชำระครั้งเดียว
+                        </span>
+                        คุ้มครองตลอดระยะสัญญา ทั้งนี้เบี้ยประกันภัยจะขึ้นอยู่กับ เพศ
+                        อายุ จำนวนเงินเอาประกันภัย และระยะเวลาเอาประกันภัยของแต่ละบุคคล
+                      </td>
+                    </tr>
 
-                  <tr className="hover:bg-slate-50/70 transition-colors">
-                    <th
-                      scope="row"
-                      className="py-3.5 px-4 font-semibold text-slate-900 align-top bg-slate-50/60"
-                    >
-                      การชำระเบี้ยประกันภัยผ่านบัตรเครดิต
-                    </th>
-                    <td className="py-3.5 px-4 leading-relaxed">
-                      <span className="font-semibold text-red-600">ไม่สามารถ</span>
-                      ชำระเบี้ยประกันภัยผ่านบัตรเครดิต
-                    </td>
-                  </tr>
+                    <tr className="hover:bg-slate-50/70 transition-colors">
+                      <th
+                        scope="row"
+                        className="py-3.5 px-4 font-semibold text-slate-900 align-top bg-slate-50/60"
+                      >
+                        การชำระเบี้ยประกันภัยผ่านบัตรเครดิต
+                      </th>
+                      <td className="py-3.5 px-4 leading-relaxed">
+                        <span className="font-semibold text-red-600">ไม่สามารถ</span>
+                        ชำระเบี้ยประกันภัยผ่านบัตรเครดิต
+                      </td>
+                    </tr>
 
-                  <tr className="hover:bg-slate-50/70 transition-colors">
-                    <th
-                      scope="row"
-                      className="py-3.5 px-4 font-semibold text-slate-900 align-top bg-slate-50/60"
-                    >
-                      การขอทำสัญญาเพิ่มเติม
-                    </th>
-                    <td className="py-3.5 px-4 leading-relaxed">
-                      <span className="font-semibold text-red-600">ไม่สามารถ</span>
-                      ขอทำสัญญาเพิ่มเติม
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+                    <tr className="hover:bg-slate-50/70 transition-colors">
+                      <th
+                        scope="row"
+                        className="py-3.5 px-4 font-semibold text-slate-900 align-top bg-slate-50/60"
+                      >
+                        การขอทำสัญญาเพิ่มเติม
+                      </th>
+                      <td className="py-3.5 px-4 leading-relaxed">
+                        <span className="font-semibold text-red-600">ไม่สามารถ</span>
+                        ขอทำสัญญาเพิ่มเติม
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
         {/* 2. ผลประโยชน์ความคุ้มครอง */}
-        {showSection('benefits') && (
-          <div className="p-5 sm:p-7 space-y-5">
-            <div className="flex items-center gap-2.5">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200">
-                <ShieldCheck className="h-4.5 w-4.5" aria-hidden="true" />
-              </div>
-              <div>
-                <h3 className="text-base sm:text-lg font-bold text-slate-900">
-                  02. ผลประโยชน์ความคุ้มครอง
+        <div>
+          <button
+            type="button"
+            id="accordion-trigger-benefits"
+            aria-expanded={openSections.benefits}
+            aria-controls="accordion-panel-benefits"
+            onClick={() => toggleSection('benefits')}
+            className={`flex w-full items-center gap-3.5 px-5 py-4 sm:px-7 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-emerald-700 ${
+              openSections.benefits
+                ? 'bg-emerald-50/50 hover:bg-emerald-50/70'
+                : 'bg-white hover:bg-slate-50/90'
+            }`}
+          >
+            <span
+              className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md transition-colors ${
+                openSections.benefits
+                  ? 'bg-[#0F2A1E] text-white'
+                  : 'bg-slate-100 text-slate-800'
+              }`}
+            >
+              {openSections.benefits ? (
+                <Minus className="h-4 w-4 stroke-[2.5]" aria-hidden="true" />
+              ) : (
+                <Plus className="h-4 w-4 stroke-[2.5]" aria-hidden="true" />
+              )}
+            </span>
+            <div className="flex min-w-0 flex-1 items-center gap-2.5">
+              <ShieldCheck
+                className="h-4 w-4 shrink-0 text-emerald-700 hidden sm:block"
+                aria-hidden="true"
+              />
+              <div className="min-w-0">
+                <h3 className="text-sm sm:text-base font-bold text-slate-900">
+                  2. ผลประโยชน์ความคุ้มครอง
                 </h3>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-slate-500 truncate">
                   ความคุ้มครองกรณีเสียชีวิต (Life) และกรณีทุพพลภาพถาวรสิ้นเชิง (TPD)
                 </p>
               </div>
             </div>
+          </button>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-slate-200 rounded-xl border border-slate-200 bg-slate-50/40">
-              {/* Life */}
-              <div className="p-5 space-y-3">
-                <div className="flex items-center gap-2.5">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-700 text-white">
-                    <HeartHandshake className="h-4 w-4" aria-hidden="true" />
+          {openSections.benefits && (
+            <div
+              id="accordion-panel-benefits"
+              role="region"
+              aria-labelledby="accordion-trigger-benefits"
+              className="border-t border-slate-100 bg-white px-5 py-5 sm:px-7 sm:py-6"
+            >
+              <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-slate-200 rounded-xl border border-slate-200 bg-slate-50/40">
+                {/* Life */}
+                <div className="p-5 space-y-3">
+                  <div className="flex items-center gap-2.5">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-700 text-white">
+                      <HeartHandshake className="h-4 w-4" aria-hidden="true" />
+                    </div>
+                    <h4 className="text-base font-bold text-slate-900">
+                      เสียชีวิต (<span className="text-red-600">Life</span>)
+                    </h4>
                   </div>
-                  <h4 className="text-base font-bold text-slate-900">
-                    เสียชีวิต (<span className="text-red-600">Life</span>)
-                  </h4>
+                  <p className="text-sm leading-relaxed text-slate-700">
+                    <span className="font-semibold text-slate-900">
+                      เมื่อสมาชิกผู้เอาประกันภัยเสียชีวิต
+                    </span>{' '}
+                    และบริษัทได้รับหลักฐานพิสูจน์การมรณกรรมตามแบบและวิธีที่บริษัทกำหนดจนครบถ้วนแล้ว
+                    จะจ่ายผลประโยชน์เท่ากับ{' '}
+                    <span className="font-semibold text-red-600">
+                      {isMrta
+                        ? '100% ของจำนวนเงินเอาประกันภัยที่ลดลงตามตารางความคุ้มครอง'
+                        : '100% ของจำนวนเงินเอาประกันภัย ณ วันเริ่มสัญญา'}
+                    </span>
+                  </p>
                 </div>
-                <p className="text-sm leading-relaxed text-slate-700">
-                  <span className="font-semibold text-slate-900">
-                    เมื่อสมาชิกผู้เอาประกันภัยเสียชีวิต
-                  </span>{' '}
-                  และบริษัทได้รับหลักฐานพิสูจน์การมรณกรรมตามแบบและวิธีที่บริษัทกำหนดจนครบถ้วนแล้ว
-                  จะจ่ายผลประโยชน์เท่ากับ{' '}
-                  <span className="font-semibold text-red-600">
-                    {isMrta
-                      ? '100% ของจำนวนเงินเอาประกันภัยที่ลดลงตามตารางความคุ้มครอง'
-                      : '100% ของจำนวนเงินเอาประกันภัย ณ วันเริ่มสัญญา'}
-                  </span>
-                </p>
-              </div>
 
-              {/* TPD */}
-              <div className="p-5 space-y-3">
-                <div className="flex items-center gap-2.5">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-700 text-white">
-                    <ShieldCheck className="h-4 w-4" aria-hidden="true" />
+                {/* TPD */}
+                <div className="p-5 space-y-3">
+                  <div className="flex items-center gap-2.5">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-700 text-white">
+                      <ShieldCheck className="h-4 w-4" aria-hidden="true" />
+                    </div>
+                    <h4 className="text-base font-bold text-slate-900">
+                      ทุพพลภาพถาวรสิ้นเชิง (<span className="text-red-600">TPD</span>)
+                    </h4>
                   </div>
-                  <h4 className="text-base font-bold text-slate-900">
-                    ทุพพลภาพถาวรสิ้นเชิง (<span className="text-red-600">TPD</span>)
-                  </h4>
+                  <p className="text-sm font-semibold text-slate-900">
+                    การทุพพลภาพถาวรสิ้นเชิง{' '}
+                    <span className="font-normal text-slate-700">
+                      ในกรณีใดกรณีหนึ่งดังต่อไปนี้
+                    </span>
+                  </p>
+                  <ul className="list-disc pl-5 space-y-2 text-sm leading-relaxed text-slate-700 marker:text-red-500">
+                    <li>
+                      กรณีพิสูจน์ได้ว่าเกิดการทุพพลภาพถาวรสิ้นเชิง
+                      โดยเกิดขึ้นต่อเนื่องเป็นเวลาไม่น้อยกว่า{' '}
+                      <span className="font-medium tabular-nums">180 วัน</span>{' '}
+                      บริษัทจะ{' '}
+                      <span className="font-semibold text-red-600">
+                        จ่าย 100% ของจำนวนเงินเอาประกันภัย ณ วันเริ่มสัญญา
+                      </span>{' '}
+                      และให้ถือว่าสัญญาสิ้นสุดผลบังคับ
+                    </li>
+                    <li>
+                      กรณีที่เกิดการสูญเสียที่สามารถพิสูจน์ได้อย่างชัดเจน
+                      หรือมีข้อบ่งชี้ทางการแพทย์ชัดเจนว่าสมาชิกผู้เอาประกันภัยตกเป็นบุคคลทุพพลภาพถาวรสิ้นเชิง
+                      บริษัทจะ{' '}
+                      <span className="font-semibold text-red-600">
+                        จ่าย 100% ของจำนวนเงินเอาประกันภัย ณ วันเริ่มสัญญา
+                      </span>{' '}
+                      และให้ถือว่าสัญญาสิ้นสุดผลบังคับ
+                    </li>
+                  </ul>
                 </div>
-                <p className="text-sm font-semibold text-slate-900">
-                  การทุพพลภาพถาวรสิ้นเชิง{' '}
-                  <span className="font-normal text-slate-700">
-                    ในกรณีใดกรณีหนึ่งดังต่อไปนี้
-                  </span>
-                </p>
-                <ul className="list-disc pl-5 space-y-2 text-sm leading-relaxed text-slate-700 marker:text-red-500">
-                  <li>
-                    กรณีพิสูจน์ได้ว่าเกิดการทุพพลภาพถาวรสิ้นเชิง
-                    โดยเกิดขึ้นต่อเนื่องเป็นเวลาไม่น้อยกว่า{' '}
-                    <span className="font-medium tabular-nums">180 วัน</span>{' '}
-                    บริษัทจะ{' '}
-                    <span className="font-semibold text-red-600">
-                      จ่าย 100% ของจำนวนเงินเอาประกันภัย ณ วันเริ่มสัญญา
-                    </span>{' '}
-                    และให้ถือว่าสัญญาสิ้นสุดผลบังคับ
-                  </li>
-                  <li>
-                    กรณีที่เกิดการสูญเสียที่สามารถพิสูจน์ได้อย่างชัดเจน
-                    หรือมีข้อบ่งชี้ทางการแพทย์ชัดเจนว่าสมาชิกผู้เอาประกันภัยตกเป็นบุคคลทุพพลภาพถาวรสิ้นเชิง
-                    บริษัทจะ{' '}
-                    <span className="font-semibold text-red-600">
-                      จ่าย 100% ของจำนวนเงินเอาประกันภัย ณ วันเริ่มสัญญา
-                    </span>{' '}
-                    และให้ถือว่าสัญญาสิ้นสุดผลบังคับ
-                  </li>
-                </ul>
               </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
         {/* 3. คำนิยาม ความคุ้มครอง */}
-        {showSection('definitions') && (
-          <div className="p-5 sm:p-7 space-y-5">
-            <div className="flex items-center gap-2.5">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200">
-                <BookOpen className="h-4.5 w-4.5" aria-hidden="true" />
-              </div>
-              <div>
-                <h3 className="text-base sm:text-lg font-bold text-slate-900">
-                  03. คำนิยาม ความคุ้มครอง
+        <div>
+          <button
+            type="button"
+            id="accordion-trigger-definitions"
+            aria-expanded={openSections.definitions}
+            aria-controls="accordion-panel-definitions"
+            onClick={() => toggleSection('definitions')}
+            className={`flex w-full items-center gap-3.5 px-5 py-4 sm:px-7 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-emerald-700 ${
+              openSections.definitions
+                ? 'bg-emerald-50/50 hover:bg-emerald-50/70'
+                : 'bg-white hover:bg-slate-50/90'
+            }`}
+          >
+            <span
+              className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md transition-colors ${
+                openSections.definitions
+                  ? 'bg-[#0F2A1E] text-white'
+                  : 'bg-slate-100 text-slate-800'
+              }`}
+            >
+              {openSections.definitions ? (
+                <Minus className="h-4 w-4 stroke-[2.5]" aria-hidden="true" />
+              ) : (
+                <Plus className="h-4 w-4 stroke-[2.5]" aria-hidden="true" />
+              )}
+            </span>
+            <div className="flex min-w-0 flex-1 items-center gap-2.5">
+              <BookOpen
+                className="h-4 w-4 shrink-0 text-emerald-700 hidden sm:block"
+                aria-hidden="true"
+              />
+              <div className="min-w-0">
+                <h3 className="text-sm sm:text-base font-bold text-slate-900">
+                  3. คำนิยาม ความคุ้มครอง
                 </h3>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-slate-500 truncate">
                   ขอบเขตคำจำกัดความของการเสียชีวิตและการทุพพลภาพถาวรสิ้นเชิงตามกรมธรรม์
                 </p>
               </div>
             </div>
+          </button>
 
-            <div className="space-y-5">
+          {openSections.definitions && (
+            <div
+              id="accordion-panel-definitions"
+              role="region"
+              aria-labelledby="accordion-trigger-definitions"
+              className="border-t border-slate-100 bg-white px-5 py-5 sm:px-7 sm:py-6 space-y-5"
+            >
               {/* Definition: Life */}
               <div className="space-y-1.5">
                 <h4 className="text-sm sm:text-base font-bold text-red-600">
@@ -427,127 +540,161 @@ export const MltaDetailsSection: React.FC<MltaDetailsSectionProps> = ({
                 </ul>
               </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
         {/* 4. ข้อยกเว้นความคุ้มครอง */}
-        {showSection('exclusions') && (
-          <div className="p-5 sm:p-7 space-y-5">
-            <div className="flex items-center gap-2.5">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-800 border border-amber-200">
-                <ShieldAlert className="h-4.5 w-4.5" aria-hidden="true" />
-              </div>
-              <div>
-                <h3 className="text-base sm:text-lg font-bold text-slate-900">
-                  04. ข้อยกเว้นความคุ้มครอง
+        <div>
+          <button
+            type="button"
+            id="accordion-trigger-exclusions"
+            aria-expanded={openSections.exclusions}
+            aria-controls="accordion-panel-exclusions"
+            onClick={() => toggleSection('exclusions')}
+            className={`flex w-full items-center gap-3.5 px-5 py-4 sm:px-7 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-emerald-700 ${
+              openSections.exclusions
+                ? 'bg-amber-50/50 hover:bg-amber-50/70'
+                : 'bg-white hover:bg-slate-50/90'
+            }`}
+          >
+            <span
+              className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md transition-colors ${
+                openSections.exclusions
+                  ? 'bg-amber-700 text-white'
+                  : 'bg-slate-100 text-slate-800'
+              }`}
+            >
+              {openSections.exclusions ? (
+                <Minus className="h-4 w-4 stroke-[2.5]" aria-hidden="true" />
+              ) : (
+                <Plus className="h-4 w-4 stroke-[2.5]" aria-hidden="true" />
+              )}
+            </span>
+            <div className="flex min-w-0 flex-1 items-center gap-2.5">
+              <ShieldAlert
+                className="h-4 w-4 shrink-0 text-amber-700 hidden sm:block"
+                aria-hidden="true"
+              />
+              <div className="min-w-0">
+                <h3 className="text-sm sm:text-base font-bold text-slate-900">
+                  4. ข้อยกเว้นความคุ้มครอง
                 </h3>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-slate-500 truncate">
                   กรณีที่กรมธรรม์ไม่ให้ความคุ้มครองทั้งกรณีเสียชีวิตและทุพพลภาพถาวรสิ้นเชิง
                 </p>
               </div>
             </div>
+          </button>
 
-            {/* Key Life Exclusion Callout */}
-            <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50/70 px-4 py-3.5 text-sm text-slate-900">
-              <AlertTriangle
-                className="h-4.5 w-4.5 text-amber-700 shrink-0 mt-0.5"
-                aria-hidden="true"
-              />
-              <p className="font-semibold leading-relaxed">
-                ฆ่าตัวตายภายใน 1 ปี นับตั้งแต่วันเริ่มมีผลคุ้มครองตามกรมธรรม์ประกันภัย
-                หรือถูกผู้รับประโยชน์ฆ่าตายโดยเจตนา
-              </p>
-            </div>
+          {openSections.exclusions && (
+            <div
+              id="accordion-panel-exclusions"
+              role="region"
+              aria-labelledby="accordion-trigger-exclusions"
+              className="border-t border-slate-100 bg-white px-5 py-5 sm:px-7 sm:py-6 space-y-5"
+            >
+              {/* Key Life Exclusion Callout */}
+              <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50/70 px-4 py-3.5 text-sm text-slate-900">
+                <AlertTriangle
+                  className="h-4.5 w-4.5 text-amber-700 shrink-0 mt-0.5"
+                  aria-hidden="true"
+                />
+                <p className="font-semibold leading-relaxed">
+                  ฆ่าตัวตายภายใน 1 ปี นับตั้งแต่วันเริ่มมีผลคุ้มครองตามกรมธรรม์ประกันภัย
+                  หรือถูกผู้รับประโยชน์ฆ่าตายโดยเจตนา
+                </p>
+              </div>
 
-            {/* TPD Exclusions 1-8 */}
-            <div className="space-y-3">
-              <p className="text-sm font-semibold text-slate-900">
-                ทุพพลภาพถาวรสิ้นเชิงอันเนื่องมาจากสาเหตุต่าง ๆ ดังต่อไปนี้
-              </p>
+              {/* TPD Exclusions 1-8 */}
+              <div className="space-y-3">
+                <p className="text-sm font-semibold text-slate-900">
+                  ทุพพลภาพถาวรสิ้นเชิงอันเนื่องมาจากสาเหตุต่าง ๆ ดังต่อไปนี้
+                </p>
 
-              <ol className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm leading-relaxed text-slate-700">
-                <li className="flex gap-2.5 rounded-xl border border-slate-200 bg-slate-50/50 p-3.5">
-                  <span className="font-mono font-bold text-emerald-800 tabular-nums shrink-0">
-                    1)
-                  </span>
-                  <span>
-                    การฆ่าตัวตาย พยายามฆ่าตัวตาย หรือการทำร้ายร่างกายตนเอง
-                  </span>
-                </li>
-                <li className="flex gap-2.5 rounded-xl border border-slate-200 bg-slate-50/50 p-3.5">
-                  <span className="font-mono font-bold text-emerald-800 tabular-nums shrink-0">
-                    2)
-                  </span>
-                  <span>
-                    ขณะที่ผู้เอาประกันภัยก่ออาชญากรรมที่มีความผิดสถานหนัก
-                    หรือขณะถูกจับกุม หรือหลบหนีการจับกุม
-                  </span>
-                </li>
-                <li className="flex gap-2.5 rounded-xl border border-slate-200 bg-slate-50/50 p-3.5">
-                  <span className="font-mono font-bold text-emerald-800 tabular-nums shrink-0">
-                    3)
-                  </span>
-                  <span>
-                    สงครามไม่ว่าจะประกาศหรือไม่ก็ตาม การรุกราน
-                    หรือการกระทำของศัตรูต่างชาติ สงครามกลางเมือง การปฏิวัติ
-                    การกบฏ การจลาจล การก่อการร้าย
-                  </span>
-                </li>
-                <li className="flex gap-2.5 rounded-xl border border-slate-200 bg-slate-50/50 p-3.5">
-                  <span className="font-mono font-bold text-emerald-800 tabular-nums shrink-0">
-                    4)
-                  </span>
-                  <span>
-                    การบาดเจ็บขณะที่ผู้เอาประกันภัยกำลังขึ้นหรือกำลังลงหรือโดยสารอยู่ในอากาศยานที่มิได้จดทะเบียน
-                    เพื่อบรรทุกผู้โดยสารและมิได้ประกอบการโดยสายการบินพาณิชย์
-                  </span>
-                </li>
-                <li className="flex gap-2.5 rounded-xl border border-slate-200 bg-slate-50/50 p-3.5">
-                  <span className="font-mono font-bold text-emerald-800 tabular-nums shrink-0">
-                    5)
-                  </span>
-                  <span>
-                    ขณะที่ผู้เอาประกันภัยขับขี่หรือปฏิบัติหน้าที่เป็นพนักงานประจำอากาศยานใด ๆ
-                  </span>
-                </li>
-                <li className="flex gap-2.5 rounded-xl border border-slate-200 bg-slate-50/50 p-3.5">
-                  <span className="font-mono font-bold text-emerald-800 tabular-nums shrink-0">
-                    6)
-                  </span>
-                  <span>
-                    ขณะที่ผู้เอาประกันภัยปฏิบัติหน้าที่เป็นทหาร ตำรวจ
-                    หรืออาสาสมัครและเข้าปฏิบัติการในสงคราม หรือปราบปราม
-                  </span>
-                </li>
-                <li className="flex gap-2.5 rounded-xl border border-slate-200 bg-slate-50/50 p-3.5">
-                  <span className="font-mono font-bold text-emerald-800 tabular-nums shrink-0">
-                    7)
-                  </span>
-                  <span>
-                    ความบกพร่องทางร่างกาย การเจ็บป่วย
-                    หรือบาดเจ็บที่ผู้เอาประกันภัยทราบอยู่แล้วในขณะที่สัญญาประกันภัยเริ่มมีผลบังคับ
-                    แต่มิได้แจ้งให้บริษัทฯ ทราบ
-                    เว้นแต่ผู้นั้นได้เอาประกันภัยตามสัญญาเพิ่มเติมนี้มาแล้วเป็นเวลาไม่น้อยกว่า{' '}
-                    <span className="tabular-nums">12</span> เดือน
-                  </span>
-                </li>
-                <li className="flex gap-2.5 rounded-xl border border-slate-200 bg-slate-50/50 p-3.5">
-                  <span className="font-mono font-bold text-emerald-800 tabular-nums shrink-0">
-                    8)
-                  </span>
-                  <span>
-                    การบาดเจ็บที่เกิดขึ้นจากการกระทำของผู้เอาประกันภัย
-                    ขณะอยู่ภายใต้ฤทธิ์สุรา สารเสพติด หรือยาเสพติด ให้โทษ
-                    จนไม่สามารถครองสติได้{' '}
-                    <span className="font-semibold text-red-600">
-                      (ระดับแอลกอฮอล์ในเลือดตั้งแต่ 150 มิลลิกรัมเปอร์เซ็นต์ขึ้นไป)
+                <ol className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm leading-relaxed text-slate-700">
+                  <li className="flex gap-2.5 rounded-xl border border-slate-200 bg-slate-50/50 p-3.5">
+                    <span className="font-mono font-bold text-emerald-800 tabular-nums shrink-0">
+                      1)
                     </span>
-                  </span>
-                </li>
-              </ol>
+                    <span>
+                      การฆ่าตัวตาย พยายามฆ่าตัวตาย หรือการทำร้ายร่างกายตนเอง
+                    </span>
+                  </li>
+                  <li className="flex gap-2.5 rounded-xl border border-slate-200 bg-slate-50/50 p-3.5">
+                    <span className="font-mono font-bold text-emerald-800 tabular-nums shrink-0">
+                      2)
+                    </span>
+                    <span>
+                      ขณะที่ผู้เอาประกันภัยก่ออาชญากรรมที่มีความผิดสถานหนัก
+                      หรือขณะถูกจับกุม หรือหลบหนีการจับกุม
+                    </span>
+                  </li>
+                  <li className="flex gap-2.5 rounded-xl border border-slate-200 bg-slate-50/50 p-3.5">
+                    <span className="font-mono font-bold text-emerald-800 tabular-nums shrink-0">
+                      3)
+                    </span>
+                    <span>
+                      สงครามไม่ว่าจะประกาศหรือไม่ก็ตาม การรุกราน
+                      หรือการกระทำของศัตรูต่างชาติ สงครามกลางเมือง การปฏิวัติ
+                      การกบฏ การจลาจล การก่อการร้าย
+                    </span>
+                  </li>
+                  <li className="flex gap-2.5 rounded-xl border border-slate-200 bg-slate-50/50 p-3.5">
+                    <span className="font-mono font-bold text-emerald-800 tabular-nums shrink-0">
+                      4)
+                    </span>
+                    <span>
+                      การบาดเจ็บขณะที่ผู้เอาประกันภัยกำลังขึ้นหรือกำลังลงหรือโดยสารอยู่ในอากาศยานที่มิได้จดทะเบียน
+                      เพื่อบรรทุกผู้โดยสารและมิได้ประกอบการโดยสายการบินพาณิชย์
+                    </span>
+                  </li>
+                  <li className="flex gap-2.5 rounded-xl border border-slate-200 bg-slate-50/50 p-3.5">
+                    <span className="font-mono font-bold text-emerald-800 tabular-nums shrink-0">
+                      5)
+                    </span>
+                    <span>
+                      ขณะที่ผู้เอาประกันภัยขับขี่หรือปฏิบัติหน้าที่เป็นพนักงานประจำอากาศยานใด ๆ
+                    </span>
+                  </li>
+                  <li className="flex gap-2.5 rounded-xl border border-slate-200 bg-slate-50/50 p-3.5">
+                    <span className="font-mono font-bold text-emerald-800 tabular-nums shrink-0">
+                      6)
+                    </span>
+                    <span>
+                      ขณะที่ผู้เอาประกันภัยปฏิบัติหน้าที่เป็นทหาร ตำรวจ
+                      หรืออาสาสมัครและเข้าปฏิบัติการในสงคราม หรือปราบปราม
+                    </span>
+                  </li>
+                  <li className="flex gap-2.5 rounded-xl border border-slate-200 bg-slate-50/50 p-3.5">
+                    <span className="font-mono font-bold text-emerald-800 tabular-nums shrink-0">
+                      7)
+                    </span>
+                    <span>
+                      ความบกพร่องทางร่างกาย การเจ็บป่วย
+                      หรือบาดเจ็บที่ผู้เอาประกันภัยทราบอยู่แล้วในขณะที่สัญญาประกันภัยเริ่มมีผลบังคับ
+                      แต่มิได้แจ้งให้บริษัทฯ ทราบ
+                      เว้นแต่ผู้นั้นได้เอาประกันภัยตามสัญญาเพิ่มเติมนี้มาแล้วเป็นเวลาไม่น้อยกว่า{' '}
+                      <span className="tabular-nums">12</span> เดือน
+                    </span>
+                  </li>
+                  <li className="flex gap-2.5 rounded-xl border border-slate-200 bg-slate-50/50 p-3.5">
+                    <span className="font-mono font-bold text-emerald-800 tabular-nums shrink-0">
+                      8)
+                    </span>
+                    <span>
+                      การบาดเจ็บที่เกิดขึ้นจากการกระทำของผู้เอาประกันภัย
+                      ขณะอยู่ภายใต้ฤทธิ์สุรา สารเสพติด หรือยาเสพติด ให้โทษ
+                      จนไม่สามารถครองสติได้{' '}
+                      <span className="font-semibold text-red-600">
+                        (ระดับแอลกอฮอล์ในเลือดตั้งแต่ 150 มิลลิกรัมเปอร์เซ็นต์ขึ้นไป)
+                      </span>
+                    </span>
+                  </li>
+                </ol>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </section>
   );

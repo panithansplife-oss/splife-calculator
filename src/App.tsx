@@ -408,16 +408,16 @@ export default function App() {
         <section
           id="rules-section"
           aria-label="เงื่อนไขและข้อกำหนดการคำนวณเบี้ยประกัน"
-          className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 space-y-4 print:hidden"
+          className="rounded-2xl border border-slate-200 bg-white p-3.5 sm:p-4 space-y-2 print:hidden"
         >
-          <h2 className="text-base font-semibold text-slate-900">
+          <h2 className="text-[13px] leading-[18px] font-semibold text-slate-900">
             เงื่อนไขและเกณฑ์การคำนวณเบี้ยประกันคุ้มครองสินเชื่อ (
             {insuranceType === 'mrta' ? 'แบบทุนลดลง MRTA' : 'แบบทุนคงที่ MLTA'})
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 pt-1 text-xs sm:text-sm text-slate-600">
-            <div className="space-y-1">
-              <p className="font-semibold text-slate-900">01. เกณฑ์อายุผู้เอาประกัน (พ.ศ.)</p>
-              <p className="leading-relaxed">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-3 text-xs sm:text-sm leading-[13px] text-slate-600">
+            <div className="space-y-0.5">
+              <p className="font-semibold leading-[14px] text-slate-900">01. เกณฑ์อายุผู้เอาประกัน (พ.ศ.)</p>
+              <p className="text-[9px] leading-[13px]">
                 คำนวณอายุจากสูตร{' '}
                 <span className="font-medium text-slate-800">
                   ปีปัจจุบัน (พ.ศ.) ลบ ปีเกิด (พ.ศ.)
@@ -427,15 +427,15 @@ export default function App() {
                   : 'โดยต้องมีอายุระหว่าง 20–65 ปี (รวมระยะเวลาไม่เกิน 70 ปี)'}
               </p>
             </div>
-            <div className="space-y-1">
-              <p className="font-semibold text-slate-900">02. วงเงินทุนประกันคุ้มครอง</p>
-              <p className="leading-relaxed">
+            <div className="space-y-0.5">
+              <p className="font-semibold leading-[14px] text-slate-900">02. วงเงินทุนประกันคุ้มครอง</p>
+              <p className="text-[9px] leading-[13px]">
                 กำหนดทุนประกันขั้นต่ำ <span className="font-mono font-medium text-slate-800">50,000</span> บาท และสูงสุดไม่เกิน <span className="font-mono font-medium text-slate-800">150,000,000</span> บาท (150 ล้านบาท) ค่าที่กรอกต้องเป็นตัวเลขจำนวนเต็มเท่านั้น
               </p>
             </div>
-            <div className="space-y-1">
-              <p className="font-semibold text-slate-900">03. ระยะเวลาเอาประกันและสิทธิประโยชน์</p>
-              <p className="leading-relaxed">
+            <div className="space-y-0.5">
+              <p className="font-semibold leading-[14px] text-slate-900">03. ระยะเวลาเอาประกันและสิทธิประโยชน์</p>
+              <p className="text-[9px] leading-[13px]">
                 แสดงตารางครบ 1–30 ปี (ตัวเลขจำนวนเต็มเท่านั้น){' '}
                 <span className="font-semibold text-amber-800">
                   ต้องไม่เกินกว่าระยะเวลากู้ยืมเงินตามสัญญากู้
